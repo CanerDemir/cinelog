@@ -1,0 +1,111 @@
+# Integration Test Configuration for Splash Screen
+# This file configures the integration test environment for comprehensive testing
+
+name: splash_screen_integration_tests
+description: Comprehensive integration tests for splash screen functionality
+
+# Test environment configuration
+environment:
+  flutter: ">=3.0.0"
+  dart: ">=3.0.0"
+
+# Test execution settings
+test_settings:
+  timeout: 300 # 5 minutes timeout for each test
+  retry_count: 2
+  parallel_execution: false # Run tests sequentially for stability
+
+# Device configurations to test
+test_devices:
+  - name: "small_phone"
+    width: 320
+    height: 568
+    pixel_ratio: 2.0
+  - name: "medium_phone"
+    width: 375
+    height: 667
+    pixel_ratio: 2.0
+  - name: "large_phone"
+    width: 414
+    height: 896
+    pixel_ratio: 3.0
+  - name: "tablet"
+    width: 768
+    height: 1024
+    pixel_ratio: 2.0
+  - name: "tablet_landscape"
+    width: 1024
+    height: 768
+    pixel_ratio: 2.0
+
+# Test categories and their priorities
+test_categories:
+  core_functionality:
+    priority: 1
+    description: "Basic splash screen functionality and navigation"
+    tests:
+      - "Complete app launch flow from splash to home screen"
+      - "Splash screen with debug configuration"
+      - "Splash screen with fast configuration"
+      - "Navigation timing consistency"
+      - "App state preservation during splash transition"
+
+  performance:
+    priority: 2
+    description: "Performance and animation smoothness"
+    tests:
+      - "Animation frame rate and smoothness"
+      - "Memory usage during splash screen lifecycle"
+      - "Animation controller performance and cleanup"
+      - "Responsive layout performance on different screen sizes"
+      - "Transition performance to home screen"
+
+  accessibility:
+    priority: 2
+    description: "Accessibility and screen reader compatibility"
+    tests:
+      - "Screen reader compatibility and semantic labels"
+      - "High contrast mode compatibility"
+      - "Reduced motion accessibility support"
+      - "Focus management and keyboard navigation"
+      - "Accessibility guidelines compliance"
+
+  error_handling:
+    priority: 3
+    description: "Error handling and edge cases"
+    tests:
+      - "Error handling and fallback mechanisms"
+      - "Configuration edge cases verification"
+      - "Memory leak detection over multiple cycles"
+
+# Performance benchmarks
+performance_benchmarks:
+  max_frame_time: 33 # milliseconds (30 FPS minimum)
+  target_frame_time: 16 # milliseconds (60 FPS target)
+  max_navigation_time: 4000 # milliseconds
+  max_memory_usage: 50 # MB
+  max_dropped_frames_percentage: 10 # percent
+
+# Accessibility requirements
+accessibility_requirements:
+  min_contrast_ratio: 4.5
+  min_touch_target_size: 44 # pixels
+  max_animation_duration: 5000 # milliseconds
+  support_screen_readers: true
+  support_high_contrast: true
+  support_reduced_motion: true
+
+# Test reporting
+reporting:
+  generate_html_report: true
+  generate_json_report: true
+  include_screenshots: true
+  include_performance_metrics: true
+  output_directory: "test_reports/integration"
+
+# CI/CD integration
+ci_settings:
+  fail_on_accessibility_violations: true
+  fail_on_performance_regression: true
+  generate_coverage_report: true
+  upload_test_artifacts: true
