@@ -1,0 +1,70 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]   # master kullanıyorsan burayı değiştir
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+
+      - run: flutter --version
+      - run: flutter config --enable-web
+      - run: flutter pub get
+
+      # Repo adına göre base-href'i otomatik ayarla
+      - name: Compute BASE_HREF
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          OWNER="${{ github.repository_owner }}"
+          if [ "$REPO" = "$OWNER.github.io" ]; then
+            echo "BASE_HREF=/" >> $GITHUB_ENV
+          else
+            echo "BASE_HREF=/$REPO/" >> $GITHUB_ENV
+          fi
+
+      - name: Build web release
+        run: flutter build web --release --base-href "$BASE_HREF"
+        # Service worker istemiyorsan (cache sorunları için) şunu kullan:
+        # run: flutter build web --release --base-href "$BASE_HREF" --pwa-strategy=none
+
+      # Clean URL (/# olmadan) kullanıyorsan deep-link 404'lerini çözmek için:
+      - name: Add 404 fallback
+        run: cp build/web/index.html build/web/404.html
+
+      # Özel domain kullanacaksan bu adımı aç ve domainini yaz
+      # - name: Add CNAME
+      #   run: echo "example.com" > build/web/CNAME
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
