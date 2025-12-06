@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import '../models/watchlist_item.dart';
-import '../screens/add_item_screen.dart';
+import '../screens/movie_details_screen.dart';
 
 class WatchlistTile extends StatelessWidget {
   final WatchlistItem item;
   final VoidCallback onChanged;
+  final String contextId;
 
   const WatchlistTile({
     super.key,
     required this.item,
     required this.onChanged,
+    this.contextId = 'default',
   });
 
   Widget _buildTypeIndicator() {
     return Container(
-      width: 56,
-      height: 80,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFF2A2D3A), // Fallback color
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -32,217 +32,135 @@ class WatchlistTile extends StatelessWidget {
                 ],
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            item.type == 'movie' ? Icons.movie_outlined : Icons.tv_outlined,
-            color: Colors.white,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            item.type == 'movie' ? 'MOVIE' : 'TV',
-            style: const TextStyle(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              item.type == 'movie' ? Icons.movie_outlined : Icons.tv_outlined,
               color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
+              size: 40,
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              item.type == 'movie' ? 'MOVIE' : 'TV',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      child: InkWell(
+    final heroTag = '${contextId}_poster_${item.dateAdded.toIso8601String()}';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2D3A),
         borderRadius: BorderRadius.circular(16),
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddItemScreen(item: item),
-            ),
-          );
-          onChanged();
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Poster image or type indicator
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: item.posterUrl != null && item.posterUrl!.isNotEmpty
-                    ? Image.network(
-                        item.posterUrl!,
-                        width: 56,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildTypeIndicator();
-                        },
-                      )
-                    : _buildTypeIndicator(),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MovieDetailsScreen(
+                  item: item,
+                  heroTag: heroTag,
+                ),
               ),
-              const SizedBox(width: 16),
-              // Content
+            );
+            onChanged();
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Poster Image (Expanded to fill available space)
               Expanded(
+                child: Hero(
+                  tag: heroTag,
+                  child: ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: item.posterUrl != null && item.posterUrl!.isNotEmpty
+                        ? Image.network(
+                            item.posterUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return _buildTypeIndicator();
+                            },
+                          )
+                        : _buildTypeIndicator(),
+                  ),
+                ),
+              ),
+
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title with watched status
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  decoration: item.isWatched
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                  color: item.isWatched
-                                      ? Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withOpacity(0.6)
-                                      : null,
-                                ),
-                          ),
-                        ),
-                        if (item.isWatched)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  size: 14,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Watched',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
+                    // Title
+                    Text(
+                      item.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    // Genre and year
-                    if (item.genre != null || item.year != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest
-                              .withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          [
-                            if (item.genre != null) item.genre!,
-                            if (item.year != null) item.year.toString(),
-                          ].join(' • '),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                      ),
-                    const SizedBox(height: 8),
-                    // Description
-                    if (item.description != null)
-                      Text(
-                        item.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.7),
-                              height: 1.4,
-                            ),
-                      ),
-                    const SizedBox(height: 12),
-                    // Rating and actions
+                    const SizedBox(height: 4),
+
+                    // Rating and Year Row
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        if (item.isWatched && item.rating != null) ...[
+                        // Rating
+                        if (item.imdbRating != null || item.rating != null)
                           Row(
-                            children: List.generate(5, (index) {
-                              return Icon(
-                                index < item.rating!
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                size: 18,
-                                color: Colors.amber,
-                              );
-                            }),
+                            children: [
+                              const Icon(Icons.star,
+                                  size: 12, color: Color(0xFFFF6B35)),
+                              const SizedBox(width: 4),
+                              Text(
+                                item.imdbRating?.toStringAsFixed(1) ??
+                                    (item.rating! * 2).toStringAsFixed(1),
+                                style: const TextStyle(
+                                  color: Color(0xFFFF6B35),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                          const Spacer(),
-                        ] else
-                          const Spacer(),
-                        // Action buttons
-                        if (!item.isWatched)
-                          FilledButton.tonalIcon(
-                            onPressed: () async {
-                              item.isWatched = true;
-                              await item.save();
-                              onChanged();
-                            },
-                            icon: const Icon(Icons.check, size: 16),
-                            label: const Text('Mark Watched'),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                        if (item.isWatched)
-                          OutlinedButton.icon(
-                            onPressed: () async {
-                              item.isWatched = false;
-                              item.rating = null;
-                              await item.save();
-                              onChanged();
-                            },
-                            icon: const Icon(Icons.undo, size: 16),
-                            label: const Text('Unwatch'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+
+                        // Year
+                        if (item.year != null)
+                          Text(
+                            '${item.year}',
+                            style: const TextStyle(
+                              color: Color(0xFF9CA3AF),
+                              fontSize: 11,
                             ),
                           ),
                       ],

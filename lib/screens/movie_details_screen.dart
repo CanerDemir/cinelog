@@ -6,8 +6,13 @@ import 'add_item_screen.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
   final WatchlistItem item;
+  final String? heroTag;
 
-  const MovieDetailsScreen({super.key, required this.item});
+  const MovieDetailsScreen({
+    super.key,
+    required this.item,
+    this.heroTag,
+  });
 
   @override
   State<MovieDetailsScreen> createState() => _MovieDetailsScreenState();
@@ -33,18 +38,21 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
       body: Stack(
         children: [
           // Background Poster Image
-          SizedBox(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: item.posterUrl != null && item.posterUrl!.isNotEmpty
-                ? Image.network(
-                    item.posterUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _buildFallbackBackground();
-                    },
-                  )
-                : _buildFallbackBackground(),
+          Hero(
+            tag: widget.heroTag ?? 'poster_${item.dateAdded.toIso8601String()}',
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              child: item.posterUrl != null && item.posterUrl!.isNotEmpty
+                  ? Image.network(
+                      item.posterUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildFallbackBackground();
+                      },
+                    )
+                  : _buildFallbackBackground(),
+            ),
           ),
 
           // Gradient Overlay

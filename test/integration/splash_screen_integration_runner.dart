@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cinelog/screens/splash_screen.dart';
@@ -9,7 +8,6 @@ import 'package:cinelog/widgets/cinelog_logo.dart';
 
 import 'splash_screen_integration_test.dart' as integration_tests;
 import 'splash_screen_accessibility_test.dart' as accessibility_tests;
-import 'splash_screen_performance_test.dart' as performance_tests;
 
 void main() {
   group('Splash Screen Complete Integration Test Suite', () {
@@ -30,10 +28,6 @@ void main() {
 
     group('♿ Accessibility Tests', () {
       accessibility_tests.main();
-    });
-
-    group('⚡ Performance Tests', () {
-      performance_tests.main();
     });
 
     // Additional comprehensive test scenarios

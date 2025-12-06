@@ -3,7 +3,6 @@ import '../models/watchlist_item.dart';
 import '../services/storage_service.dart';
 import '../services/data_service.dart';
 import 'add_item_screen.dart';
-import 'movie_details_screen.dart';
 import 'category_list_screen.dart';
 import '../widgets/watchlist_tile.dart';
 import '../widgets/cinelog_logo.dart';
@@ -148,9 +147,41 @@ class _HomeScreenState extends State<HomeScreen> {
                         stops: const [0.0, 0.7, 1.0],
                       ),
                     ),
-                    padding: const EdgeInsets.only(right: 40, bottom: 8),
+                    padding: const EdgeInsets.only(right: 16, bottom: 8),
                     child: _buildCineLogLogo(),
                   ),
+
+                  // Search Bar
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A2D3A).withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                      ),
+                      child: TextField(
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: const InputDecoration(
+                          hintText: 'Search...',
+                          hintStyle: TextStyle(color: Color(0xFF6B7280)),
+                          prefixIcon: Icon(Icons.search,
+                              color: Color(0xFF6B7280), size: 18),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 0), // Centering text vertically
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 16),
 
                   // Settings / Menu Button
                   Container(
@@ -308,31 +339,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(
                 height: 100), // Space for floating logo + extra top padding
 
-            // Search Bar
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF2A2D3A),
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: TextField(
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Search movie ....',
-                  hintStyle: TextStyle(color: Color(0xFF6B7280)),
-                  prefixIcon: Icon(Icons.search, color: Color(0xFF6B7280)),
-                  border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-              ),
-            ),
-
-            const SizedBox(height: 20),
+            const SizedBox(
+                height: 100), // Space for floating logo + extra top padding
 
             // Tab Bar
             Container(
@@ -365,9 +373,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TabBarView(
                 children: [
                   _buildVerticalMovieList(_notWatchedMovies,
-                      'No unwatched movies yet', 'Add Movie'),
+                      'No unwatched movies yet', 'movies_not_watched', 'Add Movie'),
                   _buildVerticalMovieList(
-                      _watchedMovies, 'No watched movies yet', 'Add Movie'),
+                      _watchedMovies, 'No watched movies yet', 'movies_watched', 'Add Movie'),
                 ],
               ),
             ),
@@ -378,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildVerticalMovieList(List<WatchlistItem> items, String emptyMessage,
-      [String addButtonLabel = 'Add Movie']) {
+      String contextId, [String addButtonLabel = 'Add Movie']) {
     if (items.isEmpty) {
       // Use existing empty section but adapt it or create simple center text
       return Center(
@@ -414,17 +422,21 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 100),
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.65, // Adjust based on card height/width ratio
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: WatchlistTile(
-            item: item,
-            onChanged: _loadItems,
-          ),
+        return WatchlistTile(
+          item: item,
+          onChanged: _loadItems,
+          contextId: contextId,
         );
       },
     );
@@ -440,31 +452,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(
                 height: 100), // Space for floating logo + extra top padding
 
-            // Search Bar
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF2A2D3A),
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: TextField(
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Search TV series ....',
-                  hintStyle: TextStyle(color: Color(0xFF6B7280)),
-                  prefixIcon: Icon(Icons.search, color: Color(0xFF6B7280)),
-                  border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-              ),
-            ),
-
-            const SizedBox(height: 20),
+            const SizedBox(
+                height: 100), // Space for floating logo + extra top padding
 
             // Tab Bar
             Container(
@@ -497,9 +486,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TabBarView(
                 children: [
                   _buildVerticalMovieList(_notWatchedTVSeries,
-                      'No unwatched TV series yet', 'Add TV Series'),
+                      'No unwatched TV series yet', 'tv_not_watched', 'Add TV Series'),
                   _buildVerticalMovieList(_watchedTVSeries,
-                      'No watched TV series yet', 'Add TV Series'),
+                      'No watched TV series yet', 'tv_watched', 'Add TV Series'),
                 ],
               ),
             ),
@@ -517,36 +506,13 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(
               height: 100), // Space for floating logo + extra top padding
 
-          // Search Bar
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF2A2D3A),
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: TextField(
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                hintText: 'Search watchlist ...',
-                hintStyle: TextStyle(color: Color(0xFF6B7280)),
-                prefixIcon: Icon(Icons.search, color: Color(0xFF6B7280)),
-                border: InputBorder.none,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-            ),
-          ),
-
-          const SizedBox(height: 20),
+          const SizedBox(
+              height: 100), // Space for floating logo + extra top padding
 
           // All Items List
           Expanded(
             child: _buildVerticalMovieList(
-                _watchlistItems, 'No items in watchlist yet', 'Add Item'),
+                _watchlistItems, 'No items in watchlist yet', 'watchlist_all', 'Add Item'),
           ),
         ],
       ),
@@ -563,31 +529,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(
                 height: 100), // Space for floating logo + extra top padding
 
-            // Search Bar
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF2A2D3A),
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: TextField(
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Search favorites ...',
-                  hintStyle: TextStyle(color: Color(0xFF6B7280)),
-                  prefixIcon: Icon(Icons.search, color: Color(0xFF6B7280)),
-                  border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-              ),
-            ),
-
-            const SizedBox(height: 20),
+            const SizedBox(
+                height: 100), // Space for floating logo + extra top padding
 
             // Tab Bar
             Container(
@@ -620,9 +563,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TabBarView(
                 children: [
                   _buildVerticalMovieList(
-                      _favoriteMovies, 'No favorite movies yet', 'Add Movie'),
+                      _favoriteMovies, 'No favorite movies yet', 'fav_movies', 'Add Movie'),
                   _buildVerticalMovieList(_favoriteTVSeries,
-                      'No favorite TV series yet', 'Add TV Series'),
+                      'No favorite TV series yet', 'fav_tv', 'Add TV Series'),
                 ],
               ),
             ),

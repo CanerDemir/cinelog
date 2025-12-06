@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cinelog/screens/splash_screen.dart';
 import 'package:cinelog/models/splash_config.dart';
 import 'package:cinelog/widgets/cinelog_logo.dart';
-import 'package:cinelog/services/storage_service.dart';
 
 void main() {
   group('Splash Screen Integration Testing and Final Polish', () {
