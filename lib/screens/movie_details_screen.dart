@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/watchlist_item.dart';
 import '../services/storage_service.dart';
+import '../services/imdb_service.dart';
 import 'add_item_screen.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
@@ -15,12 +16,14 @@ class MovieDetailsScreen extends StatefulWidget {
 class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   late WatchlistItem item;
   bool isBookmarked = false;
+  Future<IMDbData?>? _imdbDataFuture;
 
   @override
   void initState() {
     super.initState();
     item = widget.item;
     isBookmarked = item.isWatched;
+    _imdbDataFuture = IMDbService.getIMDbDataByTitle(item.title, year: item.year?.toString());
   }
 
   @override
@@ -196,6 +199,54 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       
+                      const SizedBox(height: 16),
+                      
+                      // Actors and Year
+                      FutureBuilder<IMDbData?>(
+                        future: _imdbDataFuture,
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData || snapshot.data == null) {
+                            // Fallback if no data or loading
+                            if (item.year != null) {
+                               return Text(
+                                'Year: ${item.year}',
+                                style: const TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 14,
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          }
+                          
+                          final data = snapshot.data!;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (data.year != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    'Year: ${data.year}',
+                                    style: const TextStyle(
+                                      color: Colors.white60,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              if (data.actors != null)
+                                Text(
+                                  'Cast: ${data.actors}',
+                                  style: const TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                      
                       const SizedBox(height: 24),
                       
                       // Action Buttons Row
@@ -352,14 +403,6 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
       item.isWatched = isBookmarked;
     });
     
-    if (isBookmarked && item.rating == null) {
-      // If marking as watched for first time, ask for rating
-      final rating = await _showRatingDialog();
-      if (rating != null) {
-        item.rating = rating;
-      }
-    }
-    
     await StorageService.updateItem(item);
     
     if (mounted) {
@@ -367,8 +410,8 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
         SnackBar(
           content: Text(
             isBookmarked 
-                ? '${item.title} added to watchlist!' 
-                : '${item.title} removed from watchlist!',
+                ? '${item.title} marked as watched!' 
+                : '${item.title} marked as not watched!',
           ),
           backgroundColor: const Color(0xFFFF6B35),
           duration: const Duration(seconds: 2),
@@ -405,8 +448,6 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     // Refresh the screen when returning from edit
     setState(() {});
   }
-
-
 
   void _getReservation() async {
     if (!item.isWatched) {

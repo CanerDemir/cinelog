@@ -768,7 +768,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final itemsPerRow = (itemCount / 2).ceil(); // Items in first row
     
     return SizedBox(
-      height: 450, // Adjusted height for two rows
+      height: 560, // Increased height to fix overflow
       child: Column(
         children: [
           // First Row
@@ -812,6 +812,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         width: 160,
         margin: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.only(bottom: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
