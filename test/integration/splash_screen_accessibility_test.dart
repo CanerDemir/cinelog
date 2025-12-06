@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../lib/screens/splash_screen.dart';
-import '../../lib/models/splash_config.dart';
-import '../../lib/widgets/cinelog_logo.dart';
+import 'package:cinelog/screens/splash_screen.dart';
+import 'package:cinelog/models/splash_config.dart';
+import 'package:cinelog/widgets/cinelog_logo.dart';
 
 void main() {
-
   group('Splash Screen Accessibility Tests', () {
-    testWidgets('Screen reader compatibility and semantic labels', (WidgetTester tester) async {
+    testWidgets('Screen reader compatibility and semantic labels',
+        (WidgetTester tester) async {
       // Enable semantics for accessibility testing
       final SemanticsHandle handle = tester.ensureSemantics();
 
@@ -45,7 +45,7 @@ void main() {
 
       // Check that important elements are focusable
       await tester.pump();
-      
+
       // Verify no accessibility violations
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
       await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));
@@ -55,7 +55,8 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('High contrast mode compatibility', (WidgetTester tester) async {
+    testWidgets('High contrast mode compatibility',
+        (WidgetTester tester) async {
       // Test with high contrast theme
       await tester.pumpWidget(
         MaterialApp(
@@ -86,13 +87,15 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('Reduced motion accessibility support', (WidgetTester tester) async {
+    testWidgets('Reduced motion accessibility support',
+        (WidgetTester tester) async {
       // Test with reduced motion preferences
       await tester.pumpWidget(
         MaterialApp(
           home: SplashScreen(
             config: const SplashConfig(
-              logoAnimationDuration: Duration(milliseconds: 100), // Reduced animation
+              logoAnimationDuration:
+                  Duration(milliseconds: 100), // Reduced animation
               textAnimationDuration: Duration(milliseconds: 100),
               displayDuration: Duration(seconds: 1),
             ),
@@ -107,7 +110,7 @@ void main() {
 
       // Verify animations complete quickly for reduced motion
       await tester.pump(const Duration(milliseconds: 200));
-      
+
       // Check that content is still visible and accessible
       expect(find.byType(CineLogLogo), findsOneWidget);
       expect(find.text('CineLog'), findsOneWidget);
@@ -115,7 +118,8 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('Focus management and keyboard navigation', (WidgetTester tester) async {
+    testWidgets('Focus management and keyboard navigation',
+        (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
@@ -129,14 +133,15 @@ void main() {
 
       // Test that splash screen doesn't interfere with focus
       // Since splash screen is non-interactive, it shouldn't trap focus
-      final splashScreenWidget = tester.widget<SplashScreen>(find.byType(SplashScreen));
+      final splashScreenWidget =
+          tester.widget<SplashScreen>(find.byType(SplashScreen));
       expect(splashScreenWidget, isNotNull);
 
       // Verify no focusable elements that could trap keyboard users
       final focusableElements = find.byWidgetPredicate(
         (widget) => widget is Focus || widget is FocusScope,
       );
-      
+
       // Splash screen should not have interactive focus elements
       // that could interfere with screen reader navigation
       await tester.pump();
@@ -144,7 +149,8 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('Screen reader announcements and labels', (WidgetTester tester) async {
+    testWidgets('Screen reader announcements and labels',
+        (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
@@ -157,7 +163,8 @@ void main() {
       );
 
       // Verify semantic labels are present
-      expect(find.bySemanticsLabel('CineLog app loading screen'), findsOneWidget);
+      expect(
+          find.bySemanticsLabel('CineLog app loading screen'), findsOneWidget);
 
       // Check that logo has appropriate semantic meaning
       final logoFinder = find.byType(CineLogLogo);
@@ -168,7 +175,8 @@ void main() {
       expect(textFinder, findsOneWidget);
 
       // Test semantic tree structure
-      final semanticsTree = tester.binding.pipelineOwner.semanticsOwner?.rootSemanticsNode;
+      final semanticsTree =
+          tester.binding.pipelineOwner.semanticsOwner?.rootSemanticsNode;
       expect(semanticsTree, isNotNull);
 
       await tester.pump();
@@ -176,7 +184,8 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('Color contrast and visibility requirements', (WidgetTester tester) async {
+    testWidgets('Color contrast and visibility requirements',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: SplashScreen(config: SplashConfig.production()),
@@ -201,7 +210,8 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('Animation accessibility with screen readers', (WidgetTester tester) async {
+    testWidgets('Animation accessibility with screen readers',
+        (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
@@ -224,7 +234,7 @@ void main() {
       // Pump through animation frames
       for (int i = 0; i < 30; i++) {
         await tester.pump(const Duration(milliseconds: 16));
-        
+
         // Verify elements remain accessible during animation
         expect(find.byType(CineLogLogo), findsOneWidget);
         expect(find.text('CineLog'), findsOneWidget);
@@ -241,7 +251,7 @@ void main() {
         MaterialApp(
           home: MediaQuery(
             data: const MediaQueryData(
-              textScaleFactor: 2.0, // Large text scaling
+              textScaler: TextScaler.linear(2.0), // Large text scaling
             ),
             child: SplashScreen(config: SplashConfig.production()),
           ),
@@ -258,14 +268,15 @@ void main() {
 
       // Check that scaled text doesn't break layout
       await tester.pump();
-      
+
       // Verify no overflow issues with large text
       expect(tester.takeException(), isNull);
 
       await tester.pumpAndSettle();
     });
 
-    testWidgets('Voice control and switch navigation compatibility', (WidgetTester tester) async {
+    testWidgets('Voice control and switch navigation compatibility',
+        (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
@@ -284,12 +295,13 @@ void main() {
       // Verify no interactive elements that could confuse voice control
       // Splash screen should be purely informational
       final interactiveElements = find.byWidgetPredicate(
-        (widget) => widget is GestureDetector || 
-                   widget is InkWell || 
-                   widget is ElevatedButton ||
-                   widget is TextButton,
+        (widget) =>
+            widget is GestureDetector ||
+            widget is InkWell ||
+            widget is ElevatedButton ||
+            widget is TextButton,
       );
-      
+
       // Should find minimal interactive elements (only for navigation)
       expect(interactiveElements, findsNothing);
 
@@ -298,7 +310,8 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('Accessibility guidelines compliance', (WidgetTester tester) async {
+    testWidgets('Accessibility guidelines compliance',
+        (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
 
       await tester.pumpWidget(

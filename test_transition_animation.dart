@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cinelog/screens/splash_screen.dart';
 
 // Mock HomeScreen for testing
 class MockHomeScreen extends StatelessWidget {
@@ -33,7 +32,8 @@ class _TestSplashTransitionState extends State<TestSplashTransition> {
 
   PageRouteBuilder<void> _createFadeTransition() {
     return PageRouteBuilder<void>(
-      pageBuilder: (context, animation, secondaryAnimation) => const MockHomeScreen(),
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const MockHomeScreen(),
       transitionDuration: const Duration(milliseconds: 500),
       reverseTransitionDuration: const Duration(milliseconds: 300),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -133,7 +133,8 @@ class _TestSplashTransitionState extends State<TestSplashTransition> {
 }
 
 void main() {
-  testWidgets('Splash screen transition timing test', (WidgetTester tester) async {
+  testWidgets('Splash screen transition timing test',
+      (WidgetTester tester) async {
     // Build the test splash transition widget
     await tester.pumpWidget(
       const MaterialApp(
@@ -160,7 +161,8 @@ void main() {
     print('Transition timing test completed - 500ms duration feels natural');
   });
 
-  testWidgets('PageRouteBuilder transition properties test', (WidgetTester tester) async {
+  testWidgets('PageRouteBuilder transition properties test',
+      (WidgetTester tester) async {
     // Create a test widget that uses the same transition logic
     await tester.pumpWidget(
       MaterialApp(
@@ -172,17 +174,21 @@ void main() {
                   onPressed: () {
                     Navigator.of(context).push(
                       PageRouteBuilder<void>(
-                        pageBuilder: (context, animation, secondaryAnimation) => const MockHomeScreen(),
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            const MockHomeScreen(),
                         transitionDuration: const Duration(milliseconds: 500),
-                        reverseTransitionDuration: const Duration(milliseconds: 300),
-                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        reverseTransitionDuration:
+                            const Duration(milliseconds: 300),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
                           // Test the same transition logic as in splash screen
                           final homeScreenFadeIn = Tween<double>(
                             begin: 0.0,
                             end: 1.0,
                           ).animate(CurvedAnimation(
                             parent: animation,
-                            curve: const Interval(0.3, 1.0, curve: Curves.easeInOut),
+                            curve: const Interval(0.3, 1.0,
+                                curve: Curves.easeInOut),
                           ));
 
                           final splashScreenFadeOut = Tween<double>(
@@ -190,7 +196,8 @@ void main() {
                             end: 0.0,
                           ).animate(CurvedAnimation(
                             parent: animation,
-                            curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
+                            curve:
+                                const Interval(0.0, 0.7, curve: Curves.easeOut),
                           ));
 
                           return Stack(
@@ -199,7 +206,8 @@ void main() {
                                 opacity: splashScreenFadeOut,
                                 child: Container(
                                   color: const Color(0xFF1A1D29),
-                                  child: const Center(child: Text('Splash Content')),
+                                  child: const Center(
+                                      child: Text('Splash Content')),
                                 ),
                               ),
                               FadeTransition(
@@ -235,7 +243,8 @@ void main() {
     print('PageRouteBuilder transition test completed successfully');
   });
 
-  testWidgets('Transition animation smoothness and timing validation', (WidgetTester tester) async {
+  testWidgets('Transition animation smoothness and timing validation',
+      (WidgetTester tester) async {
     // Build the test splash transition widget
     await tester.pumpWidget(
       const MaterialApp(
@@ -249,19 +258,19 @@ void main() {
 
     // Test that transition completes within the specified 500ms duration
     // by checking animation states at different intervals
-    
+
     // At 200ms (40% through) - splash should be fading out, home not fully visible
     await tester.pump(const Duration(milliseconds: 200));
-    
+
     // At 400ms (80% through) - splash should be mostly faded, home starting to appear
     await tester.pump(const Duration(milliseconds: 200));
-    
+
     // At 500ms (100%) - transition should be complete
     await tester.pump(const Duration(milliseconds: 100));
-    
+
     // Verify final state - home screen should be visible
     expect(find.text('Home Screen'), findsOneWidget);
-    
+
     print('Transition smoothness validation completed successfully');
     print('- 500ms duration meets design requirement');
     print('- Fade-out interval: 0.0-0.8 provides smooth exit');
@@ -269,10 +278,11 @@ void main() {
     print('- Scale effect (1.0->0.98) adds subtle depth');
   });
 
-  testWidgets('Transition meets requirements 2.3 and 2.4', (WidgetTester tester) async {
+  testWidgets('Transition meets requirements 2.3 and 2.4',
+      (WidgetTester tester) async {
     // Requirement 2.3: smooth fade-out transition
     // Requirement 2.4: animations complete within 2 seconds total
-    
+
     await tester.pumpWidget(
       const MaterialApp(
         home: TestSplashTransition(),
@@ -280,21 +290,25 @@ void main() {
     );
 
     final stopwatch = Stopwatch()..start();
-    
+
     // Trigger transition
     await tester.tap(find.text('Test Transition'));
     await tester.pump();
 
     // Pump through the entire transition
     await tester.pump(const Duration(milliseconds: 500));
-    
+
     stopwatch.stop();
-    
+
     // Verify transition completed within timing requirements
-    expect(stopwatch.elapsedMilliseconds, lessThan(2000)); // Requirement 2.4: within 2 seconds
-    expect(find.text('Home Screen'), findsOneWidget); // Requirement 2.3: smooth transition completed
-    
+    expect(stopwatch.elapsedMilliseconds,
+        lessThan(2000)); // Requirement 2.4: within 2 seconds
+    expect(find.text('Home Screen'),
+        findsOneWidget); // Requirement 2.3: smooth transition completed
+
     print('Requirements validation:');
     print('✓ Requirement 2.3: Smooth fade-out transition implemented');
-    print('✓ Requirement 2.4: Transition completed in ${stopwatch.elapsedMilliseconds}ms (< 2000ms)');
-  });}
+    print(
+        '✓ Requirement 2.4: Transition completed in ${stopwatch.elapsedMilliseconds}ms (< 2000ms)');
+  });
+}

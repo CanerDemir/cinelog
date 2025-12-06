@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../lib/screens/splash_screen.dart';
-import '../../lib/models/splash_config.dart';
-import '../../lib/widgets/cinelog_logo.dart';
-import '../../lib/services/storage_service.dart';
+import 'package:cinelog/screens/splash_screen.dart';
+import 'package:cinelog/models/splash_config.dart';
+import 'package:cinelog/widgets/cinelog_logo.dart';
+import 'package:cinelog/services/storage_service.dart';
 
 void main() {
   group('Splash Screen Integration Testing and Final Polish', () {
     // Skip storage initialization in tests since it requires platform plugins
     // The splash screen tests focus on UI and animation behavior
 
-    testWidgets('Complete app launch flow - splash screen functionality', (WidgetTester tester) async {
+    testWidgets('Complete app launch flow - splash screen functionality',
+        (WidgetTester tester) async {
       // Test the complete splash screen functionality as specified in task 12
-      
+
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
@@ -51,9 +52,10 @@ void main() {
       expect(find.byType(SplashScreen), findsNothing);
     });
 
-    testWidgets('Performance impact verification - smooth animations', (WidgetTester tester) async {
+    testWidgets('Performance impact verification - smooth animations',
+        (WidgetTester tester) async {
       // Test performance impact as specified in task requirements
-      
+
       final List<Duration> frameTimes = [];
       Duration? lastFrameTime;
 
@@ -72,40 +74,45 @@ void main() {
       );
 
       // Pump frames during animation period to test performance
-      for (int i = 0; i < 60; i++) { // 1 second at 60 FPS
+      for (int i = 0; i < 60; i++) {
+        // 1 second at 60 FPS
         await tester.pump(const Duration(milliseconds: 16));
       }
 
       // Analyze performance - should maintain reasonable frame rates
       if (frameTimes.isNotEmpty) {
-        final averageFrameTime = frameTimes
-            .map((d) => d.inMilliseconds)
-            .reduce((a, b) => a + b) / frameTimes.length;
+        final averageFrameTime =
+            frameTimes.map((d) => d.inMilliseconds).reduce((a, b) => a + b) /
+                frameTimes.length;
 
         // Performance should be reasonable (allowing for test environment overhead)
-        expect(averageFrameTime, lessThan(50)); // Less than 50ms average frame time
+        expect(averageFrameTime,
+            lessThan(50)); // Less than 50ms average frame time
 
         // Check for excessive frame drops
-        final slowFrames = frameTimes.where((d) => d.inMilliseconds > 33).length;
-        expect(slowFrames, lessThan(frameTimes.length * 0.2)); // Less than 20% slow frames
+        final slowFrames =
+            frameTimes.where((d) => d.inMilliseconds > 33).length;
+        expect(slowFrames,
+            lessThan(frameTimes.length * 0.2)); // Less than 20% slow frames
       }
 
       await tester.pumpAndSettle();
     });
 
-    testWidgets('Responsive design verification - different screen sizes', (WidgetTester tester) async {
+    testWidgets('Responsive design verification - different screen sizes',
+        (WidgetTester tester) async {
       // Test responsive design as specified in Requirement 3.4
-      
+
       final List<Size> testSizes = [
         const Size(320, 568), // Small phone
-        const Size(375, 667), // Medium phone  
+        const Size(375, 667), // Medium phone
         const Size(414, 896), // Large phone
         const Size(768, 1024), // Tablet
       ];
 
       for (final size in testSizes) {
         await tester.binding.setSurfaceSize(size);
-        
+
         await tester.pumpWidget(
           MaterialApp(
             home: SplashScreen(config: SplashConfig.fast()),
@@ -128,9 +135,10 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
 
-    testWidgets('Accessibility features verification', (WidgetTester tester) async {
+    testWidgets('Accessibility features verification',
+        (WidgetTester tester) async {
       // Test accessibility features as specified in task requirements
-      
+
       final SemanticsHandle handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
@@ -169,7 +177,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: MediaQuery(
-            data: const MediaQueryData(textScaleFactor: 2.0),
+            data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
             child: SplashScreen(config: SplashConfig.production()),
           ),
         ),
@@ -182,9 +190,10 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('Animation timing and smoothness verification', (WidgetTester tester) async {
+    testWidgets('Animation timing and smoothness verification',
+        (WidgetTester tester) async {
       // Test animation timing as specified in Requirement 2.4
-      
+
       await tester.pumpWidget(
         MaterialApp(
           home: SplashScreen(config: SplashConfig.production()),
@@ -207,14 +216,15 @@ void main() {
 
       // Verify animations complete within expected timeframe
       await tester.pumpAndSettle(const Duration(seconds: 4));
-      
+
       // Navigation should have occurred by now
       expect(find.byType(SplashScreen), findsNothing);
     });
 
-    testWidgets('Error handling and fallback mechanisms', (WidgetTester tester) async {
+    testWidgets('Error handling and fallback mechanisms',
+        (WidgetTester tester) async {
       // Test error handling as specified in task requirements
-      
+
       // Test with extreme configuration that might cause issues
       await tester.pumpWidget(
         MaterialApp(
@@ -234,14 +244,15 @@ void main() {
 
       // Should still navigate even with extreme timing
       await tester.pumpAndSettle(const Duration(seconds: 2));
-      
+
       // Verify error handling doesn't prevent navigation
       expect(find.byType(SplashScreen), findsNothing);
     });
 
-    testWidgets('Memory usage and resource cleanup verification', (WidgetTester tester) async {
+    testWidgets('Memory usage and resource cleanup verification',
+        (WidgetTester tester) async {
       // Test memory usage as specified in task requirements
-      
+
       // Create and dispose splash screen multiple times
       for (int i = 0; i < 5; i++) {
         await tester.pumpWidget(
@@ -267,9 +278,10 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('Cross-configuration compatibility', (WidgetTester tester) async {
+    testWidgets('Cross-configuration compatibility',
+        (WidgetTester tester) async {
       // Test different configurations for robustness
-      
+
       final configs = [
         SplashConfig.production(),
         SplashConfig.fast(),
@@ -298,7 +310,7 @@ void main() {
 
     testWidgets('Theme consistency verification', (WidgetTester tester) async {
       // Verify theme consistency as mentioned in requirements
-      
+
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(

@@ -19,11 +19,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
   final _genreController = TextEditingController();
   final _yearController = TextEditingController();
   final _posterUrlController = TextEditingController();
-  
+
   String _selectedType = 'movie';
   bool _isWatched = false;
   int? _rating;
-  
+
   List<MovieSearchResult> _searchResults = [];
   bool _isSearching = false;
   MovieSearchResult? _selectedMovie;
@@ -54,7 +54,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
         foregroundColor: Colors.white,
         title: Text(
           isEditing ? 'Edit Movie' : 'Add New Movie',
-          style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+          style:
+              const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
         ),
         actions: [
           if (isEditing)
@@ -77,7 +78,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 _buildTitleAutocomplete(),
                 const SizedBox(height: 20),
                 DropdownButtonFormField<String>(
-                  value: _selectedType,
+                  initialValue: _selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Type',
                     prefixIcon: Icon(Icons.category),
@@ -113,7 +114,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             _buildFormSection(
               title: 'Details',
               children: [
@@ -154,7 +155,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
                             final year = int.tryParse(value);
-                            if (year == null || year < 1900 || year > DateTime.now().year + 5) {
+                            if (year == null ||
+                                year < 1900 ||
+                                year > DateTime.now().year + 5) {
                               return 'Invalid year';
                             }
                           }
@@ -179,7 +182,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       validator: (value) {
                         if (value != null && value.isNotEmpty) {
                           final uri = Uri.tryParse(value);
-                          if (uri == null || !uri.hasAbsolutePath || (!uri.isScheme('http') && !uri.isScheme('https'))) {
+                          if (uri == null ||
+                              !uri.hasAbsolutePath ||
+                              (!uri.isScheme('http') &&
+                                  !uri.isScheme('https'))) {
                             return 'Please enter a valid URL';
                           }
                         }
@@ -191,19 +197,24 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             _buildFormSection(
               title: 'Status',
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withOpacity(0.3),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: SwitchListTile(
                     title: const Text('Mark as Watched'),
                     subtitle: Text(
-                      _isWatched ? 'You have watched this item' : 'Add to your watchlist',
+                      _isWatched
+                          ? 'You have watched this item'
+                          : 'Add to your watchlist',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     value: _isWatched,
@@ -220,10 +231,16 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.05),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.2),
                       ),
                     ),
                     child: Column(
@@ -231,16 +248,21 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       children: [
                         Text(
                           'Your Rating',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'How would you rate this ${_selectedType}?',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                          ),
+                          'How would you rate this $_selectedType?',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.7),
+                                  ),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -257,7 +279,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                 margin: const EdgeInsets.only(right: 4),
                                 child: Icon(
                                   isSelected ? Icons.star : Icons.star_border,
-                                  color: isSelected ? Colors.amber : Colors.grey,
+                                  color:
+                                      isSelected ? Colors.amber : Colors.grey,
                                   size: 32,
                                 ),
                               ),
@@ -266,11 +289,14 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         ),
                         if (_rating != null)
                           Text(
-                            '${_rating}/5 stars',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            '$_rating/5 stars',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                       ],
                     ),
@@ -279,7 +305,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ],
             ),
             const SizedBox(height: 40),
-            
+
             // Action buttons
             Row(
               children: [
@@ -291,7 +317,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       label: const Text('Delete'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Theme.of(context).colorScheme.error,
-                        side: BorderSide(color: Theme.of(context).colorScheme.error),
+                        side: BorderSide(
+                            color: Theme.of(context).colorScheme.error),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
@@ -323,13 +350,19 @@ class _AddItemScreenState extends State<AddItemScreen> {
       final item = WatchlistItem(
         title: _titleController.text,
         type: _selectedType,
-        description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+        description: _descriptionController.text.isEmpty
+            ? null
+            : _descriptionController.text,
         genre: _genreController.text.isEmpty ? null : _genreController.text,
-        year: _yearController.text.isEmpty ? null : int.parse(_yearController.text),
+        year: _yearController.text.isEmpty
+            ? null
+            : int.parse(_yearController.text),
         isWatched: _isWatched,
         dateAdded: widget.item?.dateAdded ?? DateTime.now(),
         rating: _isWatched ? _rating : null,
-        posterUrl: _posterUrlController.text.isEmpty ? null : _posterUrlController.text,
+        posterUrl: _posterUrlController.text.isEmpty
+            ? null
+            : _posterUrlController.text,
         // Include IMDb data if available
         imdbRating: _selectedMovie?.imdbData?.rating,
         imdbVotes: _selectedMovie?.imdbData?.voteCount,
@@ -368,17 +401,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
         ),
         const SizedBox(height: 16),
         ...children,
       ],
     );
   }
-
-
 
   void _deleteItem() async {
     final confirmed = await showDialog<bool>(
@@ -434,15 +465,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
             labelText: 'Title *',
             hintText: 'Search for a movie or TV series',
             prefixIcon: const Icon(Icons.search),
-            suffixIcon: _isSearching 
+            suffixIcon: _isSearching
                 ? const SizedBox(
-                    width: 20, 
-                    height: 20, 
+                    width: 20,
+                    height: 20,
                     child: Padding(
                       padding: EdgeInsets.all(8.0),
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                  ) 
+                  )
                 : null,
           ),
           onChanged: _searchMovies,
@@ -487,7 +518,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                 width: 40,
                                 height: 60,
                                 color: Colors.grey.shade800,
-                                child: const Icon(Icons.image_not_supported, size: 20),
+                                child: const Icon(Icons.image_not_supported,
+                                    size: 20),
                               );
                             },
                           ),
@@ -497,7 +529,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
                           height: 60,
                           color: Colors.grey.shade800,
                           child: Icon(
-                            result.mediaType == 'movie' ? Icons.movie : Icons.tv,
+                            result.mediaType == 'movie'
+                                ? Icons.movie
+                                : Icons.tv,
                             color: Colors.white,
                           ),
                         ),
@@ -521,7 +555,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF2A2D3A).withOpacity(0.5),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3)),
+              border:
+                  Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3)),
             ),
             child: Row(
               children: [
@@ -569,7 +604,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       if (_selectedMovie!.voteAverage != null)
                         Row(
                           children: [
-                            const Icon(Icons.star, color: Colors.amber, size: 16),
+                            const Icon(Icons.star,
+                                color: Colors.amber, size: 16),
                             const SizedBox(width: 4),
                             Text(
                               '${_selectedMovie!.voteAverage!.toStringAsFixed(1)}/10',
@@ -620,8 +656,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
     });
 
     try {
-      final details = await MovieSearchService.getDetails(movie.id, movie.mediaType);
-      
+      final details =
+          await MovieSearchService.getDetails(movie.id, movie.mediaType);
+
       if (details != null) {
         setState(() {
           _selectedMovie = details;
@@ -633,10 +670,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
           }
           _posterUrlController.text = details.fullPosterUrl;
           _selectedType = details.mediaType;
-          
+
           // Display IMDb data if available
           if (details.imdbData != null) {
-            print('IMDb data found: ${details.imdbData!.rating} (${details.imdbData!.voteCount} votes)');
+            print(
+                'IMDb data found: ${details.imdbData!.rating} (${details.imdbData!.voteCount} votes)');
           }
         });
       }

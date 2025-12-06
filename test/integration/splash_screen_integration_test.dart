@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../lib/main.dart' as app;
-import '../../lib/screens/splash_screen.dart';
-import '../../lib/screens/home_screen.dart';
-import '../../lib/models/splash_config.dart';
-import '../../lib/widgets/cinelog_logo.dart';
+import 'package:cinelog/main.dart' as app;
+import 'package:cinelog/screens/splash_screen.dart';
+import 'package:cinelog/screens/home_screen.dart';
+import 'package:cinelog/models/splash_config.dart';
+import 'package:cinelog/widgets/cinelog_logo.dart';
 
 void main() {
-
   group('Splash Screen Integration Tests', () {
-    testWidgets('Complete app launch flow from splash to home screen', (WidgetTester tester) async {
+    testWidgets('Complete app launch flow from splash to home screen',
+        (WidgetTester tester) async {
       // Start the app
       app.main();
       await tester.pumpAndSettle();
@@ -39,12 +39,13 @@ void main() {
       // Verify home screen is properly loaded with expected components
       expect(find.byType(BottomNavigationBar), findsOneWidget);
       expect(find.byType(FloatingActionButton), findsOneWidget);
-      
+
       // Verify the CineLog logo is present in home screen
       expect(find.byType(CineLogLogo), findsOneWidget);
     });
 
-    testWidgets('Splash screen with debug configuration', (WidgetTester tester) async {
+    testWidgets('Splash screen with debug configuration',
+        (WidgetTester tester) async {
       // Create app with debug configuration
       await tester.pumpWidget(
         MaterialApp(
@@ -66,7 +67,8 @@ void main() {
       expect(find.byType(HomeScreen), findsOneWidget);
     });
 
-    testWidgets('Splash screen with fast configuration', (WidgetTester tester) async {
+    testWidgets('Splash screen with fast configuration',
+        (WidgetTester tester) async {
       // Create app with fast configuration
       await tester.pumpWidget(
         MaterialApp(
@@ -86,10 +88,11 @@ void main() {
       expect(find.byType(HomeScreen), findsOneWidget);
     });
 
-    testWidgets('Animation performance and smoothness verification', (WidgetTester tester) async {
+    testWidgets('Animation performance and smoothness verification',
+        (WidgetTester tester) async {
       // Track frame rendering performance
       final List<Duration> frameDurations = [];
-      
+
       // Override frame callback to measure performance
       tester.binding.addPersistentFrameCallback((duration) {
         frameDurations.add(duration);
@@ -114,15 +117,21 @@ void main() {
 
       // Check that we're not dropping too many frames
       // Allow some tolerance for test environment
-      final droppedFrames = frameDurations.where((d) => d.inMilliseconds > 20).length;
-      expect(droppedFrames, lessThan(frameDurations.length * 0.1)); // Less than 10% dropped frames
+      final droppedFrames =
+          frameDurations.where((d) => d.inMilliseconds > 20).length;
+      expect(
+          droppedFrames,
+          lessThan(
+              frameDurations.length * 0.1)); // Less than 10% dropped frames
 
       await tester.pumpAndSettle();
     });
 
-    testWidgets('Responsive design on different screen sizes', (WidgetTester tester) async {
+    testWidgets('Responsive design on different screen sizes',
+        (WidgetTester tester) async {
       // Test on small screen (phone)
-      await tester.binding.setSurfaceSize(const Size(375, 667)); // iPhone SE size
+      await tester.binding
+          .setSurfaceSize(const Size(375, 667)); // iPhone SE size
       await tester.pumpWidget(
         MaterialApp(
           home: SplashScreen(config: SplashConfig.production()),
@@ -130,7 +139,8 @@ void main() {
       );
 
       // Verify logo is appropriately sized for small screen
-      final smallScreenLogo = tester.widget<CineLogLogo>(find.byType(CineLogLogo));
+      final smallScreenLogo =
+          tester.widget<CineLogLogo>(find.byType(CineLogLogo));
       expect(smallScreenLogo.size, greaterThanOrEqualTo(80.0));
       expect(smallScreenLogo.size, lessThanOrEqualTo(150.0));
 
@@ -143,7 +153,8 @@ void main() {
       );
 
       // Verify logo scales appropriately for larger screen
-      final largeScreenLogo = tester.widget<CineLogLogo>(find.byType(CineLogLogo));
+      final largeScreenLogo =
+          tester.widget<CineLogLogo>(find.byType(CineLogLogo));
       expect(largeScreenLogo.size, greaterThanOrEqualTo(80.0));
       expect(largeScreenLogo.size, lessThanOrEqualTo(150.0));
 
@@ -156,14 +167,16 @@ void main() {
       );
 
       // Verify layout adapts to landscape
-      final landscapeLogo = tester.widget<CineLogLogo>(find.byType(CineLogLogo));
+      final landscapeLogo =
+          tester.widget<CineLogLogo>(find.byType(CineLogLogo));
       expect(landscapeLogo.size, greaterThanOrEqualTo(80.0));
 
       // Reset to default size
       await tester.binding.setSurfaceSize(null);
     });
 
-    testWidgets('Error handling and fallback mechanisms', (WidgetTester tester) async {
+    testWidgets('Error handling and fallback mechanisms',
+        (WidgetTester tester) async {
       // Test with a configuration that might cause issues
       await tester.pumpWidget(
         MaterialApp(
@@ -188,7 +201,8 @@ void main() {
       expect(find.byType(HomeScreen), findsOneWidget);
     });
 
-    testWidgets('Memory usage and resource cleanup', (WidgetTester tester) async {
+    testWidgets('Memory usage and resource cleanup',
+        (WidgetTester tester) async {
       // Track widget lifecycle
       await tester.pumpWidget(
         MaterialApp(
@@ -208,11 +222,11 @@ void main() {
 
       // Force garbage collection to verify no memory leaks
       await tester.pumpAndSettle();
-      
+
       // Navigate away and back to test cleanup
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
-      
+
       // Verify no splash screen remnants
       expect(find.byType(SplashScreen), findsNothing);
     });
@@ -223,7 +237,7 @@ void main() {
       // Test navigation timing multiple times
       for (int i = 0; i < 3; i++) {
         final stopwatch = Stopwatch()..start();
-        
+
         await tester.pumpWidget(
           MaterialApp(
             home: SplashScreen(config: SplashConfig.production()),
@@ -232,7 +246,7 @@ void main() {
 
         // Wait for navigation
         await tester.pumpAndSettle(const Duration(seconds: 5));
-        
+
         stopwatch.stop();
         navigationTimes.add(stopwatch.elapsedMilliseconds);
 
@@ -241,13 +255,16 @@ void main() {
       }
 
       // Verify timing consistency (within reasonable range)
-      final averageTime = navigationTimes.reduce((a, b) => a + b) / navigationTimes.length;
+      final averageTime =
+          navigationTimes.reduce((a, b) => a + b) / navigationTimes.length;
       for (final time in navigationTimes) {
-        expect((time - averageTime).abs(), lessThan(500)); // Within 500ms variance
+        expect(
+            (time - averageTime).abs(), lessThan(500)); // Within 500ms variance
       }
     });
 
-    testWidgets('App state preservation during splash transition', (WidgetTester tester) async {
+    testWidgets('App state preservation during splash transition',
+        (WidgetTester tester) async {
       // Start the full app
       app.main();
       await tester.pumpAndSettle();
@@ -260,11 +277,12 @@ void main() {
 
       // Verify home screen is loaded with proper state
       expect(find.byType(HomeScreen), findsOneWidget);
-      
+
       // Verify app theme is preserved
       final materialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
       expect(materialApp.theme?.brightness, Brightness.dark);
-      expect(materialApp.theme?.scaffoldBackgroundColor, const Color(0xFF1A1D29));
+      expect(
+          materialApp.theme?.scaffoldBackgroundColor, const Color(0xFF1A1D29));
     });
   });
 }

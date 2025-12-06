@@ -1,3 +1,5 @@
+
+  
 import 'package:hive/hive.dart';
 
 part 'watchlist_item.g.dart';
@@ -58,4 +60,40 @@ class WatchlistItem extends HiveObject {
     this.imdbVotes,
     this.imdbId,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'type': type,
+      'description': description,
+      'genre': genre,
+      'year': year,
+      'isWatched': isWatched,
+      'dateAdded': dateAdded.toIso8601String(),
+      'rating': rating,
+      'posterUrl': posterUrl,
+      'isFavorite': isFavorite,
+      'imdbRating': imdbRating,
+      'imdbVotes': imdbVotes,
+      'imdbId': imdbId,
+    };
+  }
+
+  factory WatchlistItem.fromJson(Map<String, dynamic> json) {
+    return WatchlistItem(
+      title: json['title'],
+      type: json['type'],
+      description: json['description'],
+      genre: json['genre'],
+      year: json['year'],
+      isWatched: json['isWatched'] ?? false,
+      dateAdded: DateTime.parse(json['dateAdded']),
+      rating: json['rating'],
+      posterUrl: json['posterUrl'],
+      isFavorite: json['isFavorite'] ?? false,
+      imdbRating: json['imdbRating']?.toDouble(),
+      imdbVotes: json['imdbVotes'],
+      imdbId: json['imdbId'],
+    );
+  }
 }

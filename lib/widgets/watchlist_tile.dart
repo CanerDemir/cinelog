@@ -11,7 +11,7 @@ class WatchlistTile extends StatelessWidget {
     required this.item,
     required this.onChanged,
   });
-  
+
   Widget _buildTypeIndicator() {
     return Container(
       width: 56,
@@ -102,20 +102,32 @@ class WatchlistTile extends StatelessWidget {
                         Expanded(
                           child: Text(
                             item.title,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              decoration: item.isWatched ? TextDecoration.lineThrough : null,
-                              color: item.isWatched 
-                                  ? Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
-                                  : null,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  decoration: item.isWatched
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                  color: item.isWatched
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withOpacity(0.6)
+                                      : null,
+                                ),
                           ),
                         ),
                         if (item.isWatched)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -132,7 +144,8 @@ class WatchlistTile extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                               ],
@@ -144,9 +157,13 @@ class WatchlistTile extends StatelessWidget {
                     // Genre and year
                     if (item.genre != null || item.year != null)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withOpacity(0.5),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -154,9 +171,10 @@ class WatchlistTile extends StatelessWidget {
                             if (item.genre != null) item.genre!,
                             if (item.year != null) item.year.toString(),
                           ].join(' • '),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                         ),
                       ),
                     const SizedBox(height: 8),
@@ -167,9 +185,12 @@ class WatchlistTile extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                          height: 1.4,
-                        ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.7),
+                              height: 1.4,
+                            ),
                       ),
                     const SizedBox(height: 12),
                     // Rating and actions
@@ -179,7 +200,9 @@ class WatchlistTile extends StatelessWidget {
                           Row(
                             children: List.generate(5, (index) {
                               return Icon(
-                                index < item.rating! ? Icons.star : Icons.star_border,
+                                index < item.rating!
+                                    ? Icons.star
+                                    : Icons.star_border,
                                 size: 18,
                                 color: Colors.amber,
                               );
@@ -199,7 +222,8 @@ class WatchlistTile extends StatelessWidget {
                             icon: const Icon(Icons.check, size: 16),
                             label: const Text('Mark Watched'),
                             style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -215,7 +239,8 @@ class WatchlistTile extends StatelessWidget {
                             icon: const Icon(Icons.undo, size: 16),
                             label: const Text('Unwatch'),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),

@@ -6,7 +6,7 @@ class IMDbData {
   final double rating;
   final int voteCount;
   final String? actors;
-  final String? year;
+  final String? year; 
 
   IMDbData({
     required this.imdbId,

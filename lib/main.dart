@@ -25,10 +25,8 @@ class WatchlistApp extends StatelessWidget {
           primary: Color(0xFFFF6B35),
           secondary: Color(0xFFFF6B35),
           surface: Color(0xFF1A1D29),
-          background: Color(0xFF1A1D29),
           onSurface: Colors.white,
-          onBackground: Colors.white,
-          surfaceVariant: Color(0xFF2A2D3A),
+          surfaceContainerHighest: Color(0xFF2A2D3A),
           onSurfaceVariant: Color(0xFFB0B3B8),
         ),
         appBarTheme: const AppBarTheme(
