@@ -140,9 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                         colors: [
-                          const Color(0xFF1A1D29).withOpacity(0.9),
-                          const Color(0xFF1A1D29).withOpacity(0.7),
-                          const Color(0xFF1A1D29).withOpacity(0.0),
+                          const Color(0xFF1A1D29).withValues(alpha: 0.9),
+                          const Color(0xFF1A1D29).withValues(alpha: 0.7),
+                          const Color(0xFF1A1D29).withValues(alpha: 0.0),
                         ],
                         stops: const [0.0, 0.7, 1.0],
                       ),
@@ -163,14 +163,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       child: TextField(
-                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 13),
                         decoration: const InputDecoration(
                           hintText: 'Search...',
                           hintStyle: TextStyle(color: Color(0xFF6B7280)),
                           prefixIcon: Icon(Icons.search,
                               color: Color(0xFF6B7280), size: 18),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 0), // Centering text vertically
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 0), // Centering text vertically
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -302,8 +304,8 @@ class _HomeScreenState extends State<HomeScreen> {
       // - Minimum size of 40 for very small screens
       // - Maximum size of 60 for large screens
       // - Otherwise 12% of screen width
-      final logoSize =
-          screenWidth * 0.12.clamp(40.0 / screenWidth, 60.0 / screenWidth);
+      // final logoSize = screenWidth * 0.12.clamp(40.0 / screenWidth, 60.0 / screenWidth);
+      final logoSize = 40.0;
 
       // Container height is slightly larger than logo for padding
       final containerHeight = logoSize + 10;
@@ -337,10 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             const SizedBox(
-                height: 100), // Space for floating logo + extra top padding
-
-            const SizedBox(
-                height: 100), // Space for floating logo + extra top padding
+                height: 90), // Space for floating logo + extra top padding
 
             // Tab Bar
             Container(
@@ -372,10 +371,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: TabBarView(
                 children: [
-                  _buildVerticalMovieList(_notWatchedMovies,
-                      'No unwatched movies yet', 'movies_not_watched', 'Add Movie'),
                   _buildVerticalMovieList(
-                      _watchedMovies, 'No watched movies yet', 'movies_watched', 'Add Movie'),
+                      _notWatchedMovies,
+                      'No unwatched movies yet',
+                      'movies_not_watched',
+                      'Add Movie'),
+                  _buildVerticalMovieList(_watchedMovies,
+                      'No watched movies yet', 'movies_watched', 'Add Movie'),
                 ],
               ),
             ),
@@ -385,8 +387,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildVerticalMovieList(List<WatchlistItem> items, String emptyMessage,
-      String contextId, [String addButtonLabel = 'Add Movie']) {
+  Widget _buildVerticalMovieList(
+      List<WatchlistItem> items, String emptyMessage, String contextId,
+      [String addButtonLabel = 'Add Movie']) {
     if (items.isEmpty) {
       // Use existing empty section but adapt it or create simple center text
       return Center(
@@ -394,11 +397,11 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.movie_creation_outlined,
-                size: 64, color: Colors.white.withOpacity(0.2)),
+                size: 64, color: Colors.white.withValues(alpha: 0.2)),
             const SizedBox(height: 16),
             Text(
               emptyMessage,
-              style: TextStyle(color: Colors.white.withOpacity(0.5)),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
@@ -423,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 100),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.65, // Adjust based on card height/width ratio
@@ -450,10 +453,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             const SizedBox(
-                height: 100), // Space for floating logo + extra top padding
-
-            const SizedBox(
-                height: 100), // Space for floating logo + extra top padding
+                height: 90), // Space for floating logo + extra top padding
 
             // Tab Bar
             Container(
@@ -485,10 +485,16 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: TabBarView(
                 children: [
-                  _buildVerticalMovieList(_notWatchedTVSeries,
-                      'No unwatched TV series yet', 'tv_not_watched', 'Add TV Series'),
-                  _buildVerticalMovieList(_watchedTVSeries,
-                      'No watched TV series yet', 'tv_watched', 'Add TV Series'),
+                  _buildVerticalMovieList(
+                      _notWatchedTVSeries,
+                      'No unwatched TV series yet',
+                      'tv_not_watched',
+                      'Add TV Series'),
+                  _buildVerticalMovieList(
+                      _watchedTVSeries,
+                      'No watched TV series yet',
+                      'tv_watched',
+                      'Add TV Series'),
                 ],
               ),
             ),
@@ -504,15 +510,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: [
           const SizedBox(
-              height: 100), // Space for floating logo + extra top padding
-
-          const SizedBox(
-              height: 100), // Space for floating logo + extra top padding
+              height: 90), // Space for floating logo + extra top padding
 
           // All Items List
           Expanded(
-            child: _buildVerticalMovieList(
-                _watchlistItems, 'No items in watchlist yet', 'watchlist_all', 'Add Item'),
+            child: _buildVerticalMovieList(_watchlistItems,
+                'No items in watchlist yet', 'watchlist_all', 'Add Item'),
           ),
         ],
       ),
@@ -527,10 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             const SizedBox(
-                height: 100), // Space for floating logo + extra top padding
-
-            const SizedBox(
-                height: 100), // Space for floating logo + extra top padding
+                height: 90), // Space for floating logo + extra top padding
 
             // Tab Bar
             Container(
@@ -562,8 +562,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: TabBarView(
                 children: [
-                  _buildVerticalMovieList(
-                      _favoriteMovies, 'No favorite movies yet', 'fav_movies', 'Add Movie'),
+                  _buildVerticalMovieList(_favoriteMovies,
+                      'No favorite movies yet', 'fav_movies', 'Add Movie'),
                   _buildVerticalMovieList(_favoriteTVSeries,
                       'No favorite TV series yet', 'fav_tv', 'Add TV Series'),
                 ],
