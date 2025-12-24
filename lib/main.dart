@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'services/storage_service.dart';
 import 'screens/splash_screen.dart';
 import 'models/splash_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await StorageService.init();
   runApp(const WatchlistApp());
 }
@@ -59,7 +64,8 @@ class WatchlistApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(25),
             borderSide: const BorderSide(color: Color(0xFFFF6B35), width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -90,7 +96,8 @@ class WatchlistApp extends StatelessWidget {
       ),
       themeMode: ThemeMode.dark,
       home: SplashScreen(
-        config: SplashConfig.production(), // Use production config for normal app behavior
+        config: SplashConfig
+            .production(), // Use production config for normal app behavior
       ),
       debugShowCheckedModeBanner: false,
     );

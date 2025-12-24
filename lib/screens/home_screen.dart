@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/watchlist_item.dart';
 import '../services/storage_service.dart';
 import '../services/data_service.dart';
+import '../services/firebase_service.dart';
+import 'dart:async';
 import 'add_item_screen.dart';
 import 'category_list_screen.dart';
 import '../widgets/watchlist_tile.dart';
@@ -18,11 +20,94 @@ class _HomeScreenState extends State<HomeScreen> {
   List<WatchlistItem> _allItems = [];
   String _searchQuery = '';
   int _selectedBottomNavIndex = 0;
+  StreamSubscription<List<WatchlistItem>>? _firebaseSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadItems();
+    // _startFirebaseSync(); // Temporarily disabled for manual sync
+  }
+
+  @override
+  void dispose() {
+    _firebaseSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _syncDataToFirebase() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1D29),
+        title: const Text('Sync to Firebase',
+            style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'This will upload all your local entries to your Firebase Realtime Database. Continue?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sync Now',
+                style: TextStyle(color: Color(0xFFFF6B35))),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      if (!mounted) return;
+
+      // Show loading overlay
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: Color(0xFFFF6B35)),
+        ),
+      );
+
+      try {
+        final localItems = StorageService.getAllItems();
+        await FirebaseService.syncLocalToFirebase(localItems);
+
+        if (!mounted) return;
+        Navigator.pop(context); // Dismiss loader
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data synced successfully to Firebase!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        Navigator.pop(context); // Dismiss loader
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sync failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _startFirebaseSync() {
+    _firebaseSubscription =
+        FirebaseService.getWatchlistStream().listen((items) {
+      if (mounted) {
+        setState(() {
+          _allItems = items;
+        });
+      }
+    });
   }
 
   void _loadItems() {
@@ -226,10 +311,25 @@ class _HomeScreenState extends State<HomeScreen> {
                               _loadItems(); // Refresh the list
                             }
                           }
+                        } else if (value == 'sync') {
+                          _syncDataToFirebase();
                         }
                       },
                       itemBuilder: (BuildContext context) =>
                           <PopupMenuEntry<String>>[
+                        const PopupMenuItem<String>(
+                          value: 'sync',
+                          child: Row(
+                            children: [
+                              Icon(Icons.sync,
+                                  color: Color(0xFFFF6B35), size: 20),
+                              SizedBox(width: 12),
+                              Text('Sync to Firebase',
+                                  style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
                         const PopupMenuItem<String>(
                           value: 'export',
                           child: Row(
@@ -287,7 +387,6 @@ class _HomeScreenState extends State<HomeScreen> {
             context,
             MaterialPageRoute(builder: (context) => const AddItemScreen()),
           );
-          _loadItems();
         },
         backgroundColor: const Color(0xFFFF6B35),
         child: const Icon(Icons.add, color: Colors.white),
@@ -411,7 +510,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute(
                       builder: (context) => const AddItemScreen()),
                 );
-                _loadItems();
               },
               icon: const Icon(Icons.add),
               label: Text(addButtonLabel),

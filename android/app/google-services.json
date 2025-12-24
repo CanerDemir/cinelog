@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "875046596010",
+    "firebase_url": "https://cinelog-2ab20-default-rtdb.firebaseio.com",
+    "project_id": "cinelog-2ab20",
+    "storage_bucket": "cinelog-2ab20.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:875046596010:android:6758018d61e0b34a7dcfd3",
+        "android_client_info": {
+          "package_name": "com.example.cinelog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4mrP9rHavm83Q4jrsvntyg9hD4uuDZX0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

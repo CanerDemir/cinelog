@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/watchlist_item.dart';
-import '../services/storage_service.dart';
+import '../services/firebase_service.dart';
 import '../services/imdb_service.dart';
 import 'add_item_screen.dart';
 
@@ -424,7 +424,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
       item.isWatched = isBookmarked;
     });
 
-    await StorageService.updateItem(item);
+    await FirebaseService.updateItem(item);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -444,7 +444,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   void _removeItem() async {
     final confirmed = await _showDeleteConfirmation();
     if (confirmed) {
-      await StorageService.deleteItem(item);
+      await FirebaseService.deleteItem(item);
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -480,7 +480,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
           item.rating = rating;
           isBookmarked = true;
         });
-        await StorageService.updateItem(item);
+        await FirebaseService.updateItem(item);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -620,7 +620,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                   setState(() {
                     item.rating = rating;
                   });
-                  await StorageService.updateItem(item);
+                  await FirebaseService.updateItem(item);
                 }
               },
             ),
@@ -632,7 +632,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                 Navigator.pop(context);
                 final confirmed = await _showDeleteConfirmation();
                 if (confirmed) {
-                  await StorageService.deleteItem(item);
+                  await FirebaseService.deleteItem(item);
                   if (mounted) {
                     Navigator.pop(context);
                   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/watchlist_item.dart';
-import '../services/storage_service.dart';
+import '../services/firebase_service.dart';
 import '../services/movie_search_service.dart';
 
 class AddItemScreen extends StatefulWidget {
@@ -379,10 +379,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
         widget.item!.isWatched = item.isWatched;
         widget.item!.rating = item.rating;
         widget.item!.posterUrl = item.posterUrl;
-        await StorageService.updateItem(widget.item!);
+        // id is already preserved in widget.item
+        await FirebaseService.updateItem(widget.item!);
       } else {
-        // Add new item
-        await StorageService.addItem(item);
+        // Add new item to Firebase
+        await FirebaseService.addItem(item);
       }
 
       if (mounted) {
@@ -448,7 +449,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
 
     if (confirmed == true && widget.item != null) {
-      await StorageService.deleteItem(widget.item!);
+      await FirebaseService.deleteItem(widget.item!);
       if (mounted) {
         Navigator.pop(context);
       }

@@ -1,5 +1,3 @@
-
-  
 import 'package:hive/hive.dart';
 
 part 'watchlist_item.g.dart';
@@ -11,6 +9,9 @@ class WatchlistItem extends HiveObject {
 
   @HiveField(1)
   String type; // 'movie' or 'tv'
+
+  @HiveField(13)
+  String? id; // Firebase ID
 
   @HiveField(2)
   String? description;
@@ -32,16 +33,16 @@ class WatchlistItem extends HiveObject {
 
   @HiveField(8)
   String? posterUrl; // URL for movie poster
-  
+
   @HiveField(9)
   bool isFavorite; // Whether the item is favorited
-  
+
   @HiveField(10)
   double? imdbRating; // IMDb rating (0-10)
-  
+
   @HiveField(11)
   int? imdbVotes; // Number of IMDb votes
-  
+
   @HiveField(12)
   String? imdbId; // IMDb ID
 
@@ -59,6 +60,7 @@ class WatchlistItem extends HiveObject {
     this.imdbRating,
     this.imdbVotes,
     this.imdbId,
+    this.id,
   });
 
   Map<String, dynamic> toJson() {
@@ -76,6 +78,7 @@ class WatchlistItem extends HiveObject {
       'imdbRating': imdbRating,
       'imdbVotes': imdbVotes,
       'imdbId': imdbId,
+      'id': id,
     };
   }
 
@@ -94,6 +97,7 @@ class WatchlistItem extends HiveObject {
       imdbRating: json['imdbRating']?.toDouble(),
       imdbVotes: json['imdbVotes'],
       imdbId: json['imdbId'],
+      id: json['id'],
     );
   }
 }
