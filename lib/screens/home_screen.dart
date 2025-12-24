@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/watchlist_item.dart';
-import '../services/storage_service.dart';
 import '../services/data_service.dart';
 import '../services/firebase_service.dart';
-import 'dart:async';
 import 'add_item_screen.dart';
-import 'category_list_screen.dart';
 import '../widgets/watchlist_tile.dart';
 import '../widgets/cinelog_logo.dart';
 
@@ -18,112 +15,62 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<WatchlistItem> _allItems = [];
-  String _searchQuery = '';
   int _selectedBottomNavIndex = 0;
-  StreamSubscription<List<WatchlistItem>>? _firebaseSubscription;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _loadItems();
-    // _startFirebaseSync(); // Temporarily disabled for manual sync
   }
 
   @override
   void dispose() {
-    _firebaseSubscription?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _syncDataToFirebase() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1D29),
-        title: const Text('Sync to Firebase',
-            style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'This will upload all your local entries to your Firebase Realtime Database. Continue?',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sync Now',
-                style: TextStyle(color: Color(0xFFFF6B35))),
-          ),
-        ],
-      ),
-    );
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedBottomNavIndex = index;
+    });
+  }
 
-    if (confirmed == true) {
-      if (!mounted) return;
-
-      // Show loading overlay
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(color: Color(0xFFFF6B35)),
-        ),
-      );
-
-      try {
-        final localItems = StorageService.getAllItems();
-        await FirebaseService.syncLocalToFirebase(localItems);
-
-        if (!mounted) return;
-        Navigator.pop(context); // Dismiss loader
-
+  Future<void> _loadItems() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final items = await FirebaseService.getAllItems();
+      setState(() {
+        _allItems = items;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Data synced successfully to Firebase!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        Navigator.pop(context); // Dismiss loader
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sync failed: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error loading items: $e')),
         );
       }
     }
   }
 
-  void _startFirebaseSync() {
-    _firebaseSubscription =
-        FirebaseService.getWatchlistStream().listen((items) {
-      if (mounted) {
-        setState(() {
-          _allItems = items;
-        });
-      }
-    });
-  }
-
-  void _loadItems() {
-    setState(() {
-      _allItems = StorageService.getAllItems();
-    });
-  }
-
   List<WatchlistItem> get _filteredItems {
     var items = _allItems;
 
-    if (_searchQuery.isNotEmpty) {
+    if (_searchController.text.isNotEmpty) {
       items = items
           .where((item) =>
-              item.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              (item.genre?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+              item.title
+                  .toLowerCase()
+                  .contains(_searchController.text.toLowerCase()) ||
+              (item.genre
+                      ?.toLowerCase()
+                      .contains(_searchController.text.toLowerCase()) ??
                   false))
           .toList();
     }
@@ -131,65 +78,55 @@ class _HomeScreenState extends State<HomeScreen> {
     return items;
   }
 
-  List<WatchlistItem> get _latestMovies {
-    return _allItems.where((item) => item.type == 'movie').toList()
-      ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
-  }
-
-  List<WatchlistItem> get _latestTVSeries {
-    return _allItems.where((item) => item.type == 'tv').toList()
-      ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
-  }
-
   List<WatchlistItem> get _notWatchedMovies {
-    return _allItems
+    return _filteredItems
         .where((item) => item.type == 'movie' && !item.isWatched)
         .toList()
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
   }
 
   List<WatchlistItem> get _watchedMovies {
-    return _allItems
+    return _filteredItems
         .where((item) => item.type == 'movie' && item.isWatched)
         .toList()
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
   }
 
   List<WatchlistItem> get _notWatchedTVSeries {
-    return _allItems
+    return _filteredItems
         .where((item) => item.type == 'tv' && !item.isWatched)
         .toList()
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
   }
 
   List<WatchlistItem> get _watchedTVSeries {
-    return _allItems
+    return _filteredItems
         .where((item) => item.type == 'tv' && item.isWatched)
         .toList()
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
   }
 
   List<WatchlistItem> get _favoriteItems {
-    return _allItems.where((item) => item.isFavorite).toList()
+    return _filteredItems.where((item) => item.isFavorite).toList()
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
   }
 
   List<WatchlistItem> get _favoriteMovies {
-    return _allItems
+    return _filteredItems
         .where((item) => item.type == 'movie' && item.isFavorite)
         .toList()
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
   }
 
   List<WatchlistItem> get _favoriteTVSeries {
-    return _allItems
+    return _filteredItems
         .where((item) => item.type == 'tv' && item.isFavorite)
         .toList()
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
   }
 
   List<WatchlistItem> get _watchlistItems {
-    return _allItems.toList()
+    return _filteredItems.toList()
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
   }
 
@@ -198,159 +135,152 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1D29),
       body: SafeArea(
-        child: Stack(
-          children: [
-            // Main Content - Full screen
-            IndexedStack(
-              index: _selectedBottomNavIndex,
-              children: [
-                _buildMoviesTab(),
-                _buildTVSeriesTab(),
-                _buildBookmarksTab(),
-                _buildFavoritesTab(),
-              ],
-            ),
-            // CineLog Logo - Floating overlay
-            Positioned(
-              top: 16,
-              left: 16,
-              right:
-                  16, // const EdgeInsets.all(16) would be cleaner but maintaining structure
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
+            : Stack(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          const Color(0xFF1A1D29).withValues(alpha: 0.9),
-                          const Color(0xFF1A1D29).withValues(alpha: 0.7),
-                          const Color(0xFF1A1D29).withValues(alpha: 0.0),
-                        ],
-                        stops: const [0.0, 0.7, 1.0],
-                      ),
-                    ),
-                    padding: const EdgeInsets.only(right: 16, bottom: 8),
-                    child: _buildCineLogLogo(),
+                  // Main Content - Full screen
+                  IndexedStack(
+                    index: _selectedBottomNavIndex,
+                    children: [
+                      _buildMoviesTab(),
+                      _buildTVSeriesTab(),
+                      _buildBookmarksTab(),
+                      _buildFavoritesTab(),
+                    ],
                   ),
-
-                  // Search Bar
-                  Expanded(
-                    child: Container(
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2A2D3A).withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
+                  // CineLog Logo - Floating overlay
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    right:
+                        16, // const EdgeInsets.all(16) would be cleaner but maintaining structure
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                const Color(0xFF1A1D29).withOpacity(0.9),
+                                const Color(0xFF1A1D29).withOpacity(0.7),
+                                const Color(0xFF1A1D29).withOpacity(0.0),
+                              ],
+                              stops: const [0.0, 0.7, 1.0],
+                            ),
+                          ),
+                          padding: const EdgeInsets.only(right: 16, bottom: 8),
+                          child: _buildCineLogLogo(),
                         ),
-                      ),
-                      child: TextField(
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 13),
-                        decoration: const InputDecoration(
-                          hintText: 'Search...',
-                          hintStyle: TextStyle(color: Color(0xFF6B7280)),
-                          prefixIcon: Icon(Icons.search,
-                              color: Color(0xFF6B7280), size: 18),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                              vertical: 0), // Centering text vertically
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
 
-                  const SizedBox(width: 16),
-
-                  // Settings / Menu Button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2A2D3A).withOpacity(0.8),
-                      shape: BoxShape.circle,
-                    ),
-                    child: PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, color: Colors.white),
-                      color: const Color(0xFF2A2D3A),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      onSelected: (value) async {
-                        if (value == 'export') {
-                          final result = await DataService.exportData();
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(result),
-                                backgroundColor:
-                                    result.startsWith('Export successful')
-                                        ? Colors.green
-                                        : Colors.red,
+                        // Search Bar
+                        Expanded(
+                          child: Container(
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2A2D3A).withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.1),
                               ),
-                            );
-                          }
-                        } else if (value == 'import') {
-                          final result = await DataService.importData();
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(result),
-                                backgroundColor:
-                                    result.startsWith('Import successful')
-                                        ? Colors.green
-                                        : Colors.red,
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 13),
+                              decoration: const InputDecoration(
+                                hintText: 'Search...',
+                                hintStyle: TextStyle(color: Color(0xFF6B7280)),
+                                prefixIcon: Icon(Icons.search,
+                                    color: Color(0xFF6B7280), size: 18),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                    vertical: 0), // Centering text vertically
                               ),
-                            );
-                            if (result.startsWith('Import successful')) {
-                              _loadItems(); // Refresh the list
-                            }
-                          }
-                        } else if (value == 'sync') {
-                          _syncDataToFirebase();
-                        }
-                      },
-                      itemBuilder: (BuildContext context) =>
-                          <PopupMenuEntry<String>>[
-                        const PopupMenuItem<String>(
-                          value: 'sync',
-                          child: Row(
-                            children: [
-                              Icon(Icons.sync,
-                                  color: Color(0xFFFF6B35), size: 20),
-                              SizedBox(width: 12),
-                              Text('Sync to Firebase',
-                                  style: TextStyle(color: Colors.white)),
-                            ],
+                              onChanged: (value) {
+                                setState(() {
+                                  // _searchQuery is now handled by _searchController
+                                });
+                              },
+                            ),
                           ),
                         ),
-                        const PopupMenuDivider(),
-                        const PopupMenuItem<String>(
-                          value: 'export',
-                          child: Row(
-                            children: [
-                              Icon(Icons.upload_file,
-                                  color: Colors.white70, size: 20),
-                              SizedBox(width: 12),
-                              Text('Export JSON',
-                                  style: TextStyle(color: Colors.white)),
-                            ],
+
+                        const SizedBox(width: 16),
+
+                        // Settings / Menu Button
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A2D3A).withOpacity(0.8),
+                            shape: BoxShape.circle,
                           ),
-                        ),
-                        const PopupMenuItem<String>(
-                          value: 'import',
-                          child: Row(
-                            children: [
-                              Icon(Icons.download,
-                                  color: Colors.white70, size: 20),
-                              SizedBox(width: 12),
-                              Text('Import JSON',
-                                  style: TextStyle(color: Colors.white)),
+                          child: PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert,
+                                color: Colors.white),
+                            color: const Color(0xFF2A2D3A),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            onSelected: (value) async {
+                              if (value == 'export') {
+                                final result = await DataService.exportData();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(result),
+                                      backgroundColor:
+                                          result.startsWith('Export successful')
+                                              ? Colors.green
+                                              : Colors.red,
+                                    ),
+                                  );
+                                }
+                              } else if (value == 'import') {
+                                final result = await DataService.importData();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(result),
+                                      backgroundColor:
+                                          result.startsWith('Import successful')
+                                              ? Colors.green
+                                              : Colors.red,
+                                    ),
+                                  );
+                                  if (result.startsWith('Import successful')) {
+                                    _loadItems();
+                                  }
+                                }
+                              }
+                            },
+                            itemBuilder: (BuildContext context) =>
+                                <PopupMenuEntry<String>>[
+                              const PopupMenuItem<String>(
+                                value: 'export',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.upload_file,
+                                        color: Colors.white70, size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Export JSON',
+                                        style: TextStyle(color: Colors.white)),
+                                  ],
+                                ),
+                              ),
+                              const PopupMenuItem<String>(
+                                value: 'import',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.download,
+                                        color: Colors.white70, size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Import JSON',
+                                        style: TextStyle(color: Colors.white)),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -359,22 +289,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
       ),
       bottomNavigationBar: Container(
         height: 80,
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1D29),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1D29),
           border: Border(
-            top: BorderSide(color: Color(0xFF2A2D3A), width: 1),
+            top: BorderSide(
+              color: Colors.white.withValues(alpha: 0.05),
+              width: 1,
+            ),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildBottomNavItem(Icons.movie_outlined, 'Movie', 0),
+            _buildBottomNavItem(Icons.movie_outlined, 'Movies', 0),
             _buildBottomNavItem(Icons.tv_outlined, 'TV Series', 1),
             _buildBottomNavItem(Icons.bookmark_outline, 'Watchlist', 2),
             _buildBottomNavItem(Icons.favorite_outline, 'Favorites', 3),
@@ -387,6 +317,7 @@ class _HomeScreenState extends State<HomeScreen> {
             context,
             MaterialPageRoute(builder: (context) => const AddItemScreen()),
           );
+          _loadItems();
         },
         backgroundColor: const Color(0xFFFF6B35),
         child: const Icon(Icons.add, color: Colors.white),
@@ -394,17 +325,39 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildBottomNavItem(IconData icon, String label, int index) {
+    final isSelected = _selectedBottomNavIndex == index;
+    return GestureDetector(
+      onTap: () => _onItemTapped(index),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color:
+                isSelected ? const Color(0xFFFF6B35) : const Color(0xFF6B7280),
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? const Color(0xFFFF6B35)
+                  : const Color(0xFF6B7280),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCineLogLogo() {
     return LayoutBuilder(builder: (context, constraints) {
-      // Responsive logo sizing based on screen width
-      final screenWidth = MediaQuery.of(context).size.width;
-
-      // Calculate logo size:
-      // - Minimum size of 40 for very small screens
-      // - Maximum size of 60 for large screens
-      // - Otherwise 12% of screen width
-      // final logoSize = screenWidth * 0.12.clamp(40.0 / screenWidth, 60.0 / screenWidth);
-      final logoSize = 40.0;
+      // responsive resize logic commented out as logoSize is fixed
+      const logoSize = 40.0;
 
       // Container height is slightly larger than logo for padding
       final containerHeight = logoSize + 10;
@@ -668,63 +621,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavItem(IconData icon, String label, int index) {
-    final isSelected = _selectedBottomNavIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedBottomNavIndex = index;
-        });
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color:
-                isSelected ? const Color(0xFFFF6B35) : const Color(0xFF6B7280),
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected
-                  ? const Color(0xFFFF6B35)
-                  : const Color(0xFF6B7280),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildViewAllButton(String title, List<WatchlistItem> items) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CategoryListScreen(
-              title: title,
-              items: items,
-            ),
-          ),
-        );
-      },
-      child: const Text(
-        'View all',
-        style: TextStyle(
-          color: Color(0xFFFF6B35),
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
         ),
       ),
     );

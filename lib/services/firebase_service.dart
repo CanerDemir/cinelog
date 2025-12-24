@@ -75,21 +75,4 @@ class FirebaseService {
     }
     await _watchlistRef.child(item.id!).remove();
   }
-
-  /// Syncs all local items to Firebase
-  static Future<void> syncLocalToFirebase(List<WatchlistItem> items) async {
-    for (var item in items) {
-      // If item doesn't have a Firebase ID, create it.
-      // If it does, update it. For simplicity, we'll just push if null.
-      if (item.id == null) {
-        final newEntryRef = _watchlistRef.push();
-        item.id = newEntryRef.key;
-        await newEntryRef.set(item.toJson());
-        // Save ID back to local storage if needed (HiveObject.save)
-        await item.save();
-      } else {
-        await _watchlistRef.child(item.id!).set(item.toJson());
-      }
-    }
-  }
 }
