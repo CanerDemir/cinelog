@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/watchlist_item.dart';
+import '../theme/cinematic_tokens.dart';
 import '../widgets/watchlist_tile.dart';
 
 class CategoryListScreen extends StatefulWidget {
@@ -40,9 +41,9 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1D29),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1D29),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(
           widget.title,
@@ -59,7 +60,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF2A2D3A),
+                color: CinematicTokens.panel,
                 borderRadius: BorderRadius.circular(25),
               ),
               child: TextField(

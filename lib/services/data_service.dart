@@ -1,42 +1,38 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart'; // For kIsWeb
+import 'package:flutter/foundation.dart';
+
 import '../models/watchlist_item.dart';
-import 'storage_service.dart';
+import '../repositories/watchlist_repository.dart';
+import '../util/app_log.dart';
 
 class DataService {
-  static Future<String> exportData() async {
+  static Future<String> exportItems(List<WatchlistItem> items) async {
     try {
-      final items = StorageService.getAllItems();
       final List<Map<String, dynamic>> jsonList =
           items.map((item) => item.toJson()).toList();
-      final String jsonString = jsonEncode(jsonList);
+      final String jsonString =
+          const JsonEncoder.withIndent('  ').convert(jsonList);
       final Uint8List bytes = Uint8List.fromList(utf8.encode(jsonString));
 
-      // Request permission to pick a directory (or file save location)
       String? outputFile = await FilePicker.platform.saveFile(
         dialogTitle: 'Please select an output file:',
         fileName:
             'cinelog_backup_${DateTime.now().millisecondsSinceEpoch}.json',
         type: FileType.custom,
         allowedExtensions: ['json'],
-        bytes: bytes, // Required for web and some platforms
+        bytes: bytes,
       );
 
       if (outputFile == null) {
-        // On Web, saveFile returns, triggers download, and returns null.
-        // On Desktop, if user cancels, it returns null.
-        // This makes it hard to distinguish cancel vs web success if we rely only on null.
-        // However, if we are on Web, the download "starts" so we can assume success or at least not "canceled" in the traditional blocking sense.
         if (kIsWeb) {
           return 'Export download started';
         }
         return 'Export canceled';
       }
 
-      // On Desktop/Mobile, we write the file manually if path is returned
-      // (Though newer file_picker might write it if bytes are passed? Documentation says "The file is NOT created by this method" for Desktop)
       final file = File(outputFile);
       await file.writeAsString(jsonString);
 
@@ -46,65 +42,51 @@ class DataService {
     }
   }
 
-  static Future<String> importData() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-        withData: true, // Important for Web to get bytes
-      );
+  /// Opens the file picker and returns JSON contents, or `null` if cancelled.
+  static Future<String?> pickAndReadImportJsonFile() async {
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+      withData: true,
+    );
 
-      if (result != null) {
-        String jsonString;
+    if (result == null) return null;
 
-        if (kIsWeb) {
-          // On web, we must use bytes
-          final bytes = result.files.single.bytes;
-          if (bytes == null) {
-            return 'Import failed: No data received';
-          }
-          jsonString = utf8.decode(bytes);
-        } else {
-          // On desktop/mobile, we can use path
-          final path = result.files.single.path;
-          if (path == null) {
-            return 'Import failed: No file path';
-          }
-          File file = File(path);
-          jsonString = await file.readAsString();
-        }
-
-        List<dynamic> jsonList = jsonDecode(jsonString);
-
-        int addedCount = 0;
-        int skippedCount = 0;
-
-        for (var jsonItem in jsonList) {
-          try {
-            WatchlistItem newItem = WatchlistItem.fromJson(jsonItem);
-
-            bool exists = StorageService.getAllItems().any((item) =>
-                item.title == newItem.title &&
-                item.year == newItem.year &&
-                item.type == newItem.type);
-
-            if (!exists) {
-              await StorageService.addItem(newItem);
-              addedCount++;
-            } else {
-              skippedCount++;
-            }
-          } catch (e) {
-            print('Error parsing item: $e');
-          }
-        }
-
-        return 'Import successful: $addedCount items added, $skippedCount skipped';
-      } else {
-        return 'Import canceled';
+    if (kIsWeb) {
+      final bytes = result.files.single.bytes;
+      if (bytes == null) {
+        throw StateError('No data received');
       }
-    } catch (e) {
-      return 'Import failed: $e';
+      return utf8.decode(bytes);
     }
+
+    final path = result.files.single.path;
+    if (path == null) {
+      throw StateError('No file path');
+    }
+    return File(path).readAsString();
+  }
+
+  /// Parses JSON and imports via [repo]. [onProgress] is `(done, total)` for items to write.
+  static Future<String> importJsonWithRepository(
+    String jsonString,
+    WatchlistRepository repo, {
+    void Function(int done, int total)? onProgress,
+  }) async {
+    final dynamic decoded = jsonDecode(jsonString);
+    if (decoded is! List) {
+      return 'Import failed: JSON must be an array of items';
+    }
+    final parsed = <WatchlistItem>[];
+    for (final jsonItem in decoded) {
+      try {
+        if (jsonItem is! Map) continue;
+        parsed.add(WatchlistItem.fromJson(Map<String, dynamic>.from(jsonItem)));
+      } catch (e, st) {
+        appLog('Error parsing import item', e, st);
+      }
+    }
+    final r = await repo.importItems(parsed, onProgress: onProgress);
+    return r.message;
   }
 }

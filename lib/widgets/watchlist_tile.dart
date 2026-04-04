@@ -1,6 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
 import '../models/watchlist_item.dart';
 import '../screens/movie_details_screen.dart';
+import '../theme/cinematic_tokens.dart';
 
 class WatchlistTile extends StatelessWidget {
   final WatchlistItem item;
@@ -17,7 +20,7 @@ class WatchlistTile extends StatelessWidget {
   Widget _buildTypeIndicator() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2D3A), // Fallback color
+        color: CinematicTokens.panel,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -63,7 +66,7 @@ class WatchlistTile extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2D3A),
+        color: CinematicTokens.panel,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -96,18 +99,53 @@ class WatchlistTile extends StatelessWidget {
               Expanded(
                 child: Hero(
                   tag: heroTag,
-                  child: ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: item.posterUrl != null && item.posterUrl!.isNotEmpty
-                        ? Image.network(
-                            item.posterUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildTypeIndicator();
-                            },
-                          )
-                        : _buildTypeIndicator(),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16)),
+                        child: item.posterUrl != null &&
+                                item.posterUrl!.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: item.posterUrl!,
+                                fit: BoxFit.cover,
+                                fadeInDuration: const Duration(milliseconds: 200),
+                                placeholder: (context, url) => Container(
+                                  color: CinematicTokens.panel,
+                                  alignment: Alignment.center,
+                                  child: const SizedBox(
+                                    width: 28,
+                                    height: 28,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: CinematicTokens.primaryContainer,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    _buildTypeIndicator(),
+                              )
+                            : _buildTypeIndicator(),
+                      ),
+                      if (item.isFavorite)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.55),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.favorite,
+                              color: Color(0xFFFF6B35),
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -136,15 +174,14 @@ class WatchlistTile extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         // Rating
-                        if (item.imdbRating != null || item.rating != null)
+                        if (item.imdbRating != null)
                           Row(
                             children: [
                               const Icon(Icons.star,
                                   size: 12, color: Color(0xFFFF6B35)),
                               const SizedBox(width: 4),
                               Text(
-                                item.imdbRating?.toStringAsFixed(1) ??
-                                    (item.rating! * 2).toStringAsFixed(1),
+                                item.imdbRating!.toStringAsFixed(1),
                                 style: const TextStyle(
                                   color: Color(0xFFFF6B35),
                                   fontSize: 11,

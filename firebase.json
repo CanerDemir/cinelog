@@ -1,1 +1,27 @@
-{"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"cinelog-2ab20","configurations":{"android":"1:875046596010:android:6758018d61e0b34a7dcfd3","ios":"1:875046596010:ios:03c8238fae5e74167dcfd3","web":"1:875046596010:web:a4930c96993af5b77dcfd3","windows":"1:875046596010:web:0bbca4cb9745644c7dcfd3"}}},"android":{"default":{"projectId":"cinelog-2ab20","appId":"1:875046596010:android:6758018d61e0b34a7dcfd3","fileOutput":"android/app/google-services.json"}}}}}
+{
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "flutter": {
+    "platforms": {
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "cinelog-2ab20",
+          "configurations": {
+            "android": "1:875046596010:android:6758018d61e0b34a7dcfd3",
+            "ios": "1:875046596010:ios:03c8238fae5e74167dcfd3",
+            "web": "1:875046596010:web:a4930c96993af5b77dcfd3",
+            "windows": "1:875046596010:web:0bbca4cb9745644c7dcfd3"
+          }
+        }
+      },
+      "android": {
+        "default": {
+          "projectId": "cinelog-2ab20",
+          "appId": "1:875046596010:android:6758018d61e0b34a7dcfd3",
+          "fileOutput": "android/app/google-services.json"
+        }
+      }
+    }
+  }
+}

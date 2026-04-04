@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../theme/cinematic_tokens.dart';
+
 class CineLogLogo extends StatelessWidget {
   final double size;
-  
+  final bool cinematicGlow;
+
   const CineLogLogo({
     super.key,
     this.size = 100,
+    this.cinematicGlow = false,
   });
 
   @override
@@ -16,10 +20,11 @@ class CineLogLogo extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
+          if (cinematicGlow) ...CinematicTokens.logoGlow(size),
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: cinematicGlow ? 12 : 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -31,7 +36,7 @@ class CineLogLogo extends StatelessWidget {
           height: size,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            print('CineLogLogo: Error loading image: $error');
+            debugPrint('CineLogLogo: Error loading image: $error');
             return Container(
               width: size,
               height: size,

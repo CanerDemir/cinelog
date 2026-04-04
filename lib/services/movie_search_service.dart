@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../config/api_keys.dart';
+import '../util/app_log.dart';
 import 'imdb_service.dart';
 
 class MovieSearchResult {
@@ -57,7 +59,7 @@ class MovieSearchResult {
 }
 
 class MovieSearchService {
-  static const String _apiKey = '3a224d1de2202bd05b0e744f2b2ce66d'; // TMDB API key
+  static String get _apiKey => ApiKeys.tmdb;
   static const String _baseUrl = 'https://api.themoviedb.org/3';
   
   // Use real data from TMDB API
@@ -87,8 +89,8 @@ class MovieSearchService {
         
         return results.take(10).toList();
       }
-    } catch (e) {
-      print('Error searching movies: $e');
+    } catch (e, st) {
+      appLog('Error searching movies', e, st);
     }
     
     return [];
@@ -128,15 +130,19 @@ class MovieSearchService {
         
         // Fetch IMDb data
         try {
-          result.imdbData = await IMDbService.getIMDbDataByTitle(title, year: year);
-        } catch (e) {
-          print('Error fetching IMDb data: $e');
+          result.imdbData = await IMDbService.getIMDbDataByTitle(
+            title,
+            year: year,
+            mediaType: mediaType,
+          );
+        } catch (e, st) {
+          appLog('Error fetching IMDb data', e, st);
         }
         
         return result;
       }
-    } catch (e) {
-      print('Error getting movie details: $e');
+    } catch (e, st) {
+      appLog('Error getting movie details', e, st);
     }
     
     return null;

@@ -1,10 +1,14 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../models/watchlist_item.dart';
-import '../services/firebase_service.dart';
-import '../services/imdb_service.dart';
-import 'add_item_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MovieDetailsScreen extends StatefulWidget {
+import '../models/watchlist_item.dart';
+import '../providers/app_providers.dart';
+import '../repositories/watchlist_repository.dart';
+import '../services/imdb_service.dart';
+import '../theme/cinematic_tokens.dart';
+
+class MovieDetailsScreen extends ConsumerStatefulWidget {
   final WatchlistItem item;
   final String? heroTag;
 
@@ -15,26 +19,44 @@ class MovieDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State<MovieDetailsScreen> createState() => _MovieDetailsScreenState();
+  ConsumerState<MovieDetailsScreen> createState() => _MovieDetailsScreenState();
 }
 
-class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
+class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
   late WatchlistItem item;
-  bool isBookmarked = false;
   Future<IMDbData?>? _imdbDataFuture;
 
   @override
   void initState() {
     super.initState();
     item = widget.item;
-    isBookmarked = item.isWatched;
-    _imdbDataFuture =
-        IMDbService.getIMDbDataByTitle(item.title, year: item.year?.toString());
+    _refreshOmdbFuture();
+  }
+
+  void _refreshOmdbFuture() {
+    _imdbDataFuture = IMDbService.getIMDbDataByTitle(
+      item.title,
+      year: item.year?.toString(),
+      mediaType: item.type,
+    );
+  }
+
+  WatchlistRepository? _repoOrNull() => ref.read(watchlistRepositoryProvider);
+
+  void _showRepoNotReady() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Storage is not ready. Try again in a moment.'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           // Background Poster Image
@@ -44,12 +66,13 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width,
               child: item.posterUrl != null && item.posterUrl!.isNotEmpty
-                  ? Image.network(
-                      item.posterUrl!,
+                  ? CachedNetworkImage(
+                      imageUrl: item.posterUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildFallbackBackground();
-                      },
+                      fadeInDuration: const Duration(milliseconds: 200),
+                      placeholder: (context, url) => _buildFallbackBackground(),
+                      errorWidget: (context, url, error) =>
+                          _buildFallbackBackground(),
                     )
                   : _buildFallbackBackground(),
             ),
@@ -79,13 +102,11 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
           SafeArea(
             child: Column(
               children: [
-                // Top Bar with Close and Bookmark
+                // Top bar: close, favorite, watched
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Close Button
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.5),
@@ -94,9 +115,10 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                         child: IconButton(
                           icon: const Icon(Icons.close, color: Colors.white),
                           onPressed: () => Navigator.pop(context),
+                          tooltip: 'Close',
                         ),
                       ),
-                      // Bookmark Button
+                      const Spacer(),
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.5),
@@ -104,12 +126,32 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                         ),
                         child: IconButton(
                           icon: Icon(
-                            isBookmarked
-                                ? Icons.bookmark
-                                : Icons.bookmark_border,
+                            item.isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: item.isFavorite
+                                ? CinematicTokens.primaryContainer
+                                : Colors.white,
+                          ),
+                          onPressed: _toggleFavorite,
+                          tooltip: 'Favorite',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            item.isWatched
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
                             color: Colors.white,
                           ),
-                          onPressed: _toggleBookmark,
+                          onPressed: _toggleWatched,
+                          tooltip: 'Watched',
                         ),
                       ),
                     ],
@@ -127,59 +169,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // IMDB Rating and Star Rating Row
-                      Row(
-                        children: [
-                          // IMDB Badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF5C518),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  'IMDB',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  item.imdbRating != null
-                                      ? item.imdbRating!.toStringAsFixed(1)
-                                      : item.rating != null
-                                          ? (item.rating! * 2)
-                                              .toStringAsFixed(1)
-                                          : '6.8',
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Star Rating
-                          const Icon(Icons.star, color: Colors.amber, size: 20),
-                          const SizedBox(width: 4),
-                          Text(
-                            _getFormattedRating(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildRatingSection(),
 
                       const SizedBox(height: 16),
 
@@ -265,54 +255,26 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
 
                       const SizedBox(height: 24),
 
-                      // Action Buttons Row
+                      // Remove
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [
-                            // Edit Button
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: _editItem,
-                                icon: const Icon(Icons.edit, size: 18),
-                                label: const Text('Edit'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFF6B35),
-                                  foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  minimumSize: const Size(100, 40),
-                                  textStyle: const TextStyle(fontSize: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _removeItem,
+                            icon: const Icon(Icons.delete_outline, size: 18),
+                            label: const Text('Remove'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white70,
+                              side: const BorderSide(color: Colors.white24),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                              textStyle: const TextStyle(fontSize: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
                               ),
                             ),
-
-                            const SizedBox(width: 12),
-
-                            // Remove Button
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: _removeItem,
-                                icon:
-                                    const Icon(Icons.delete_outline, size: 18),
-                                label: const Text('Remove'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white70,
-                                  side: const BorderSide(color: Colors.white24),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  minimumSize: const Size(100, 40),
-                                  textStyle: const TextStyle(fontSize: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ],
@@ -353,17 +315,73 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     );
   }
 
-  List<Widget> _buildGenreChips() {
-    List<String> genres = [];
+  Widget _buildRatingSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (item.imdbRating != null)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5C518),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'IMDb',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      item.imdbRating!.toStringAsFixed(1),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  (item.imdbVotes ?? 0) <= 0
+                      ? 'Score from OMDb / IMDb'
+                      : '${_formatVoteCount(item.imdbVotes ?? 0)} IMDb votes',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
 
-    if (item.genre != null) {
-      genres = item.genre!.split(',').map((g) => g.trim()).toList();
-    } else {
-      // Default genres based on type
-      genres = item.type == 'movie'
-          ? ['Action', 'Comedy', 'Superhero']
-          : ['Drama', 'Sci-Fi', 'Action'];
+  List<Widget> _buildGenreChips() {
+    if (item.genre == null || item.genre!.trim().isEmpty) {
+      return [];
     }
+    final genres = item.genre!
+        .split(',')
+        .map((g) => g.trim())
+        .where((g) => g.isNotEmpty)
+        .toList();
+    if (genres.isEmpty) return [];
 
     return genres
         .map((genre) => Container(
@@ -392,22 +410,6 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
         "with memorable characters and stunning visuals that make it a must-watch addition to your collection.";
   }
 
-  String _getFormattedRating() {
-    // Use IMDb data if available
-    if (item.imdbRating != null) {
-      final formattedVotes = _formatVoteCount(item.imdbVotes ?? 0);
-      return '${item.imdbRating!.toStringAsFixed(1)} ($formattedVotes reviews)';
-    }
-
-    // Fall back to user rating if available
-    if (item.rating != null) {
-      return '${(item.rating! * 2).toStringAsFixed(1)} (Your rating)';
-    }
-
-    // Default value
-    return '7.5 (Unknown reviews)';
-  }
-
   String _formatVoteCount(int votes) {
     if (votes >= 1000000) {
       return '${(votes / 1000000).toStringAsFixed(1)}M';
@@ -418,39 +420,69 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     }
   }
 
-  void _toggleBookmark() async {
-    setState(() {
-      isBookmarked = !isBookmarked;
-      item.isWatched = isBookmarked;
-    });
-
-    await FirebaseService.updateItem(item);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isBookmarked
-                ? '${item.title} marked as watched!'
-                : '${item.title} marked as not watched!',
-          ),
-          backgroundColor: const Color(0xFFFF6B35),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+  Future<void> _toggleFavorite() async {
+    final repo = _repoOrNull();
+    if (repo == null) {
+      _showRepoNotReady();
+      return;
     }
+    setState(() {
+      item.isFavorite = !item.isFavorite;
+    });
+    await repo.updateItem(item);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          item.isFavorite
+              ? 'Added to favorites'
+              : 'Removed from favorites',
+        ),
+        backgroundColor: CinematicTokens.primaryContainer,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _toggleWatched() async {
+    final repo = _repoOrNull();
+    if (repo == null) {
+      _showRepoNotReady();
+      return;
+    }
+    setState(() {
+      item.isWatched = !item.isWatched;
+    });
+    await repo.updateItem(item);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          item.isWatched
+              ? '${item.title} marked as watched'
+              : '${item.title} marked as not watched',
+        ),
+        backgroundColor: CinematicTokens.primaryContainer,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   void _removeItem() async {
     final confirmed = await _showDeleteConfirmation();
     if (confirmed) {
-      await FirebaseService.deleteItem(item);
+      final repo = _repoOrNull();
+      if (repo == null) {
+        _showRepoNotReady();
+        return;
+      }
+      await repo.deleteItem(item);
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${item.title} removed from your watchlist'),
-            backgroundColor: const Color(0xFFFF6B35),
+            backgroundColor: CinematicTokens.primaryContainer,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -458,202 +490,17 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     }
   }
 
-  void _editItem() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddItemScreen(item: item),
-      ),
-    );
-
-    // Refresh the screen when returning from edit
-    setState(() {});
-  }
-
-  void _getReservation() async {
-    if (!item.isWatched) {
-      // Mark as watched and ask for rating
-      final rating = await _showRatingDialog();
-      if (rating != null) {
-        setState(() {
-          item.isWatched = true;
-          item.rating = rating;
-          isBookmarked = true;
-        });
-        await FirebaseService.updateItem(item);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${item.title} marked as watched and rated!'),
-              backgroundColor: const Color(0xFFFF6B35),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-    } else {
-      // Already watched, show options
-      _showWatchedOptions();
-    }
-  }
-
-  Future<int?> _showRatingDialog() async {
-    int? selectedRating;
-
-    return await showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2A2D3A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Rate this movie',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'How would you rate this movie?',
-              style: TextStyle(color: Colors.white70),
-            ),
-            const SizedBox(height: 20),
-            StatefulBuilder(
-              builder: (context, setState) => Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedRating = index + 1;
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Icon(
-                        index < (selectedRating ?? 0)
-                            ? Icons.star
-                            : Icons.star_border,
-                        color: Colors.amber,
-                        size: 32,
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child:
-                const Text('Cancel', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
-            onPressed: selectedRating != null
-                ? () => Navigator.pop(context, selectedRating)
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF6B35),
-            ),
-            child: const Text('Rate'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showWatchedOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF2A2D3A),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              item.title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.edit, color: Colors.white),
-              title: const Text('Edit Movie',
-                  style: TextStyle(color: Colors.white)),
-              onTap: () async {
-                Navigator.pop(context);
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddItemScreen(item: item),
-                  ),
-                );
-                setState(() {});
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.star, color: Colors.amber),
-              title: const Text('Change Rating',
-                  style: TextStyle(color: Colors.white)),
-              onTap: () async {
-                Navigator.pop(context);
-                final rating = await _showRatingDialog();
-                if (rating != null) {
-                  setState(() {
-                    item.rating = rating;
-                  });
-                  await FirebaseService.updateItem(item);
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Remove from Watchlist',
-                  style: TextStyle(color: Colors.red)),
-              onTap: () async {
-                Navigator.pop(context);
-                final confirmed = await _showDeleteConfirmation();
-                if (confirmed) {
-                  await FirebaseService.deleteItem(item);
-                  if (mounted) {
-                    Navigator.pop(context);
-                  }
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<bool> _showDeleteConfirmation() async {
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF2A2D3A),
+            backgroundColor: CinematicTokens.panel,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text('Remove Movie',
-                style: TextStyle(color: Colors.white)),
+            title: Text(
+              item.type == 'tv' ? 'Remove series' : 'Remove movie',
+              style: const TextStyle(color: Colors.white),
+            ),
             content: Text(
               'Are you sure you want to remove "${item.title}" from your watchlist?',
               style: const TextStyle(color: Colors.white70),

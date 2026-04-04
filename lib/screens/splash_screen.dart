@@ -1,15 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../theme/cinematic_tokens.dart';
 import '../widgets/cinelog_logo.dart';
 import '../models/splash_config.dart';
 import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   final SplashConfig config;
-  
+
+  /// When set (e.g. root [AuthGate]), splash completes without replacing the
+  /// navigator route so auth routing stays mounted.
+  final VoidCallback? onNavigateToHome;
+
   const SplashScreen({
     super.key,
     this.config = const SplashConfig(),
+    this.onNavigateToHome,
   });
 
   @override
@@ -274,6 +280,10 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToHomeScreen() {
+    if (widget.onNavigateToHome != null) {
+      widget.onNavigateToHome!();
+      return;
+    }
     try {
       // Navigate to home screen using custom fade transition
       Navigator.of(context).pushReplacement(
@@ -344,7 +354,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: ScaleTransition(
                 scale: splashScaleOut,
                 child: Container(
-                  color: const Color(0xFF1A1D29), // Match splash background
+                  color: CinematicTokens.pageBackground,
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -379,7 +389,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1D29), // Dark background matching app theme
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
